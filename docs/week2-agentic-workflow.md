@@ -38,7 +38,9 @@ This document records how the bounded backend behavior below was built using an 
 
 **Inspected before modifying:** The generated `AppModule`, `AppController`, `AppService`, existing unit and e2e tests, TypeScript configuration, Vitest configuration, and backend package scripts.
 
-**Plan agreed before execution:** Add a `routing` module containing domain types, an in-memory `RoutingService`, and a controller. Expose `POST /routing-decisions/:decisionId/steps/:stepId/decision`. Seed `decision-1` with pending `step-1`, assigned to `manager-1`, and destined for the `it-support` queue. Return `201` for a valid HTTP decision; use `400` for malformed input, `403` for the wrong approver, `404` for missing records, and `409` for a previously decided step.
+**Plan agreed before execution:** Add a `routing` module containing domain types, an in-memory `RoutingService`, and a controller. Expose `POST /routing-decisions/:decisionId/steps/:stepId/decision`. Seed `decision-1` with pending `step-1`, assigned to `manager-1`, and destined for the `it-support` queue. Return `201` for a valid HTTP decision; use `400` for malformed input, `403` for the wrong approver, `404` for missing records, and `409` for a previously decided step. 
+
+The agent also planned for unit and end-to-end tests since he inspected the generated nest template. Although not required for this week, decided to keep them for now since they will be relevant later.
 
 **Approve / Redirect / Stop log:**
 
