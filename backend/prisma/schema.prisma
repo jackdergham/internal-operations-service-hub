@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model RequestType {
+  id          String    @id
+  name        String
+  department  String
+  schema      Json
+  requests    Request[]
+  createdAt   DateTime  @default(now())
+}
+
+model Request {
+  id              String       @id
+  requesterId     String
+  requestTypeId   String
+  description     String
+  formData        Json
+  status          String       @default("Submitted")
+  idempotencyKey  String?      @unique
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  requestType     RequestType  @relation(fields: [requestTypeId], references: [id])
+  attachments     Attachment[]
+  statusEvents    StatusEvent[]
+
+  @@index([requesterId])
+}
+
+model Attachment {
+  id               String   @id
+  requestId        String
+  filename         String
+  size             Int
+  contentType      String
+  storageReference String
+  request          Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+}
+
+model StatusEvent {
+  id          String   @id
+  requestId   String
+  status      String
+  source      String
+  createdAt   DateTime @default(now())
+  request     Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
+}
+
