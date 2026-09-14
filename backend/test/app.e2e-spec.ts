@@ -48,6 +48,38 @@ describe('AppController (e2e)', () => {
       .expect(400);
   });
 
+  it('creates and persists a service request through the HTTP contract', () => {
+    return request(app.getHttpServer())
+      .post('/requests')
+      .set('x-actor-id', 'employee-e2e')
+      .send({
+        requesterId: 'employee-e2e',
+        requestTypeId: 'new-laptop',
+        description: 'My laptop needs replacement for current work.',
+        formData: { department: 'Engineering' },
+        idempotencyKey: 'e2e-request-1',
+      })
+      .expect(201)
+      .expect(({ body }) => {
+        expect(body.replayed).toBe(false);
+        expect(body.request.status).toBe('Submitted');
+        expect(body.request.statusEvents[0].status).toBe('Submitted');
+      });
+  });
+
+  it('denies a request when the actor is not the requester', () => {
+    return request(app.getHttpServer())
+      .post('/requests')
+      .set('x-actor-id', 'different-employee')
+      .send({
+        requesterId: 'employee-e2e',
+        requestTypeId: 'new-laptop',
+        description: 'This identity should not submit for another employee.',
+        formData: { department: 'Engineering' },
+      })
+      .expect(403);
+  });
+
   afterEach(async () => {
     await app.close();
   });
