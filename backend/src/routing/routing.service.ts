@@ -11,6 +11,11 @@ import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
 import { DecideApprovalInput, RoutingDecision, RoutingQueueItem } from './routing.types.js';
 
+const managerByRequester: Record<string, string> = {
+  'employee-1': 'manager-1',
+  'employee-2': 'manager-2',
+};
+
 @Injectable()
 export class RoutingService implements OnModuleInit {
   private readonly decisions = new Map<string, RoutingDecision>();
@@ -118,7 +123,7 @@ export class RoutingService implements OnModuleInit {
     this.decisions.set(decisionId, {
       id: decisionId, requestId: id, requesterId, requestTypeId, status: 'AwaitingApproval',
       destinationQueue: 'it-support', submittedAt: submittedAt.toISOString(),
-      approvalSteps: [{ id: `step-${id}`, stepNumber: 1, approverId: 'manager-1', status: 'Pending' }],
+      approvalSteps: [{ id: `step-${id}`, stepNumber: 1, approverId: managerByRequester[requesterId] ?? 'manager-1', status: 'Pending' }],
     });
   }
 

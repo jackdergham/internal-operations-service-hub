@@ -76,4 +76,27 @@ describe('RoutingService', () => {
       }),
     ).rejects.toThrow(ConflictException);
   });
+
+  it('routes employee-2 requests to manager-2', async () => {
+    const service = new RoutingService();
+
+    await service.registerRequest({
+      id: 'request-2',
+      requesterId: 'employee-2',
+      requestTypeId: 'new-laptop',
+      createdAt: new Date(),
+    });
+
+    expect(service.listQueue('manager-1')).toHaveLength(1);
+    expect(service.listQueue('manager-2')).toMatchObject([
+      { requesterId: 'employee-2', approverId: 'manager-2' },
+    ]);
+
+    await expect(
+      service.decideApproval('decision-request-2', 'step-request-2', {
+        approverId: 'manager-1',
+        decision: 'approve',
+      }),
+    ).rejects.toThrow(ForbiddenException);
+  });
 });
