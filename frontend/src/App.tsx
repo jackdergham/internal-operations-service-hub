@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './index.css'
 
@@ -17,6 +17,19 @@ type QueueItem = {
   stepId: string
 }
 
+type QueueResponse = {
+  decisionId: string
+  stepId: string
+  requestId: string
+  requesterId: string
+  requestTypeId: string
+  status: QueueStatus
+  submittedAt: string
+}
+
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
+const demoActorId = 'employee-1'
+
 const initialQueue: QueueItem[] = [
   { id: 'step-1', requestId: 'REQ-0001', title: 'New laptop request', requester: 'Jordan Lee', submitted: 'Today, 09:42', category: 'IT / Equipment', status: 'Pending', decisionId: 'decision-1', stepId: 'step-1' },
   { id: 'step-2', requestId: 'REQ-0002', title: 'Annual leave request', requester: 'Maya Patel', submitted: 'Yesterday, 16:18', category: 'HR / Leave', status: 'Pending', decisionId: 'demo-decision-2', stepId: 'demo-step-2' },
@@ -34,33 +47,79 @@ function App() {
   const [rejectionReason, setRejectionReason] = useState('')
   const [actingOn, setActingOn] = useState<string | null>(null)
 
-  const submitRequest = (event: FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (view !== 'queue') return
+
+    fetch(`${apiBaseUrl}/routing-decisions/queue?approverId=manager-1`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Queue request failed')
+        return response.json() as Promise<QueueResponse[]>
+      })
+      .then((items) => setQueue(items.map((item) => ({
+        id: item.stepId,
+        requestId: item.requestId,
+        title: item.requestTypeId === 'new-laptop' ? 'New laptop request' : item.requestTypeId,
+        requester: item.requesterId,
+        submitted: new Date(item.submittedAt).toLocaleString(),
+        category: item.requestTypeId === 'new-laptop' ? 'IT / Equipment' : 'Service request',
+        status: item.status,
+        decisionId: item.decisionId,
+        stepId: item.stepId,
+      }))))
+      .catch(() => setNotice('Could not load the routing queue. Start the NestJS server and try again.'))
+  }, [view])
+
+  const submitRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmitting(true)
     setNotice('')
-    window.setTimeout(() => {
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/requests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-actor-id': demoActorId,
+        },
+        body: JSON.stringify({
+          requesterId: demoActorId,
+          requestTypeId: selectedType,
+          description,
+          formData: { department },
+          idempotencyKey: crypto.randomUUID(),
+        }),
+      })
+
+      const payload = await response.json()
+      if (!response.ok) {
+        throw new Error(payload.message ?? 'The request could not be submitted.')
+      }
+
       setSubmitting(false)
-      setNotice('Request REQ-0003 created with status Submitted.')
+      setNotice(`Request ${payload.request.id} created with status ${payload.request.status}.`)
       setDescription('')
       setDepartment('')
-    }, 500)
+    } catch (error) {
+      setSubmitting(false)
+      setNotice(error instanceof Error && error.message !== 'Failed to fetch'
+        ? error.message
+        : 'Could not reach the Intake API. Start the NestJS server and try again.')
+    }
   }
 
   const decide = async (item: QueueItem, decision: 'approve' | 'reject', reason?: string) => {
     setActingOn(item.id)
     setNotice('')
-    if (item.decisionId === 'decision-1') {
-      try {
-        const response = await fetch(`http://localhost:3000/routing-decisions/${item.decisionId}/steps/${item.stepId}/decision`, {
+    try {
+        const response = await fetch(`${apiBaseUrl}/routing-decisions/${item.decisionId}/steps/${item.stepId}/decision`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ approverId: 'manager-1', decision, ...(reason ? { reason } : {}) }),
         })
         if (!response.ok) throw new Error('The backend rejected this decision.')
-      } catch {
-        setNotice('Could not reach the backend. Start the NestJS server and try again.')
-        setActingOn(null)
-        return
-      }
+    } catch {
+      setNotice('Could not reach the backend. Start the NestJS server and try again.')
+      setActingOn(null)
+      return
     }
     setQueue((current) => current.map((candidate) => candidate.id === item.id ? { ...candidate, status: decision === 'approve' ? 'Approved' : 'Rejected' } : candidate))
     setRejecting(null)
@@ -87,7 +146,7 @@ function App() {
         {view === 'submit' ? <section className="content-grid" aria-labelledby="submit-title">
           <div className="section-intro"><p className="eyebrow">REQUEST INTAKE</p><h2 id="submit-title">What do you need help with?</h2><p>Choose a service, provide the essential details, and we will route it to the right team.</p><div className="process-note"><span className="note-number">01</span><div><strong>Every request is traceable</strong><br /><span>Your submission gets a unique ID and an immutable status history.</span></div></div></div>
           <form className="panel request-form" onSubmit={submitRequest}><div className="panel-header"><div><p className="eyebrow">NEW REQUEST</p><h3>Request details</h3></div><span className="required-label">* Required fields</span></div>
-            <label>Request type <span>*</span><select value={selectedType} onChange={(event) => setSelectedType(event.target.value)}><option value="new-laptop">New laptop / equipment</option><option value="pto-request">PTO / annual leave</option><option value="desk-relocation">Desk relocation</option></select></label>
+            <label>Request type <span>*</span><select value={selectedType} onChange={(event) => setSelectedType(event.target.value)}><option value="new-laptop">New laptop / equipment</option></select></label>
             <label>Department <span>*</span><select required value={department} onChange={(event) => setDepartment(event.target.value)}><option value="" disabled>Select your department</option><option>Engineering</option><option>People & Culture</option><option>Operations</option></select></label>
             <label>Description <span>*</span><textarea required value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Describe what you need and why..." rows={5} /><small>{description.length}/500 characters</small></label>
             <label className="file-drop"><span className="upload-icon">↑</span><span><strong>Attach supporting files</strong><br /><small>Optional · PDF, PNG or DOCX · 10 MB max</small></span><input type="file" accept=".pdf,.png,.docx" /><span className="browse">Browse</span></label>

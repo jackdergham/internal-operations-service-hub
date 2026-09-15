@@ -5,10 +5,12 @@ import {
   Injectable,
   NotFoundException,
   OnModuleInit,
+  Optional,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
+import { RoutingService } from '../routing/routing.service.js';
 import {
   CreateRequestInput,
   CreateRequestResponse,
@@ -37,7 +39,10 @@ const requestTypes = [
 
 @Injectable()
 export class IntakeService implements OnModuleInit {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly routingService?: RoutingService,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     for (const requestType of requestTypes) {
@@ -73,7 +78,17 @@ export class IntakeService implements OnModuleInit {
       });
 
       if (existing) {
-        return { request: this.toResponse(existing), replayed: true };
+        await this.routingService?.registerRequest({
+          id: existing.id,
+          requesterId: existing.requesterId,
+          requestTypeId: existing.requestTypeId,
+          createdAt: existing.createdAt,
+        });
+        const replayedRequest = await this.prisma.request.findUniqueOrThrow({
+          where: { id: existing.id },
+          include: { attachments: true, statusEvents: true },
+        });
+        return { request: this.toResponse(replayedRequest), replayed: true };
       }
     }
 
@@ -103,7 +118,19 @@ export class IntakeService implements OnModuleInit {
         include: { attachments: true, statusEvents: true },
       });
 
-      return { request: this.toResponse(request), replayed: false };
+      await this.routingService?.registerRequest({
+        id: request.id,
+        requesterId: request.requesterId,
+        requestTypeId: request.requestTypeId,
+        createdAt: request.createdAt,
+      });
+
+      const routedRequest = await this.prisma.request.findUniqueOrThrow({
+        where: { id: request.id },
+        include: { attachments: true, statusEvents: true },
+      });
+
+      return { request: this.toResponse(routedRequest), replayed: false };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new ConflictException('A request with this idempotency key already exists');

@@ -21,9 +21,23 @@ export interface ApprovalStepInstance {
 export interface RoutingDecision {
   id: string;
   requestId: string;
+  requesterId?: string;
+  requestTypeId?: string;
   status: RoutingDecisionStatus;
   destinationQueue: string;
+  submittedAt?: string;
   approvalSteps: ApprovalStepInstance[];
+}
+
+export interface RoutingQueueItem {
+  decisionId: string;
+  stepId: string;
+  requestId: string;
+  requesterId: string;
+  requestTypeId: string;
+  status: ApprovalStepStatus;
+  approverId: string;
+  submittedAt: string;
 }
 
 export interface DecideApprovalInput {
