@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <style>
+        @layer base {
+
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                overscroll-behavior: none;
+            }
+
+            main>:first-child {
+                margin-top: 0 !important;
+            }
+
+            main>:last-child {
+                margin-bottom: 0 !important;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+        id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary-fixed-dim": "#c3c0ff", "surface-container-high": "#dce9ff", "secondary-fixed-dim": "#89ceff", "on-tertiary": "#ffffff", "on-secondary": "#ffffff", "on-tertiary-fixed-variant": "#005236", "on-secondary-container": "#004666", "on-error": "#ffffff", "on-error-container": "#93000a", "outline-variant": "#c7c4d8", "secondary-fixed": "#c9e6ff", "on-tertiary-fixed": "#002113", "primary": "#3525cd", "surface-container-highest": "#d3e4fe", "surface-variant": "#d3e4fe", "primary-container": "#4f46e5", "surface-dim": "#cbdbf5", "tertiary-container": "#006e4b", "secondary-container": "#39b8fd", "surface-container-lowest": "#ffffff", "background": "#f8f9ff", "on-background": "#0b1c30", "inverse-primary": "#c3c0ff", "primary-fixed": "#e2dfff", "error-container": "#ffdad6", "error": "#ba1a1a", "tertiary": "#005338", "on-surface": "#0b1c30", "on-secondary-fixed-variant": "#004c6e", "inverse-on-surface": "#eaf1ff", "tertiary-fixed": "#6ffbbe", "on-primary": "#ffffff", "surface-container": "#e5eeff", "surface-bright": "#f8f9ff", "on-primary-fixed-variant": "#3323cc", "on-primary-container": "#dad7ff", "on-primary-fixed": "#0f0069", "surface-tint": "#4d44e3", "on-secondary-fixed": "#001e2f", "outline": "#777587", "on-surface-variant": "#464555", "surface-container-low": "#eff4ff", "tertiary-fixed-dim": "#4edea3", "inverse-surface": "#213145", "surface": "#f8f9ff", "on-tertiary-container": "#67f4b7", "secondary": "#006591" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-lg": "1.25rem", "space-sm": "0.5rem", "margin-lg": "2rem", "margin-md": "1.5rem", "gutter": "1rem", "margin": "1rem", "space-xl": "2rem", "space-md": "0.75rem", "space-xs": "0.25rem", "gutter-lg": "1.5rem" }, "fontFamily": { "body-md": ["Geist"], "body-sm": ["Geist"], "label-md": ["JetBrains Mono"], "headline-xl-mobile": ["Geist"], "headline-lg": ["Geist"], "headline-sm": ["Geist"], "headline-md": ["Geist"], "label-sm": ["JetBrains Mono"], "body-lg": ["Geist"], "headline-xl": ["Geist"], "caption": ["Geist"], "headline-lg-mobile": ["Geist"] }, "fontSize": { "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }], "headline-xl-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400" }], "headline-xl": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600" }], "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }] } } } };</script>
+</head>
+
+<body class="bg-surface font-body-md text-body-md text-on-surface"><svg class="inline-defs-container" aria-hidden="true"
+        style="position:absolute;width:0;height:0;overflow:hidden"></svg>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <style>
+        @layer base {
+
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                overscroll-behavior: none;
+            }
+
+            main>:first-child {
+                margin-top: 0 !important;
+            }
+
+            main>:last-child {
+                margin-bottom: 0 !important;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+        id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary-fixed-dim": "#c3c0ff", "surface-container-high": "#dce9ff", "secondary-fixed-dim": "#89ceff", "on-tertiary": "#ffffff", "on-secondary": "#ffffff", "on-tertiary-fixed-variant": "#005236", "on-secondary-container": "#004666", "on-error": "#ffffff", "on-error-container": "#93000a", "outline-variant": "#c7c4d8", "secondary-fixed": "#c9e6ff", "on-tertiary-fixed": "#002113", "primary": "#3525cd", "surface-container-highest": "#d3e4fe", "surface-variant": "#d3e4fe", "primary-container": "#4f46e5", "surface-dim": "#cbdbf5", "tertiary-container": "#006e4b", "secondary-container": "#39b8fd", "surface-container-lowest": "#ffffff", "background": "#f8f9ff", "on-background": "#0b1c30", "inverse-primary": "#c3c0ff", "primary-fixed": "#e2dfff", "error-container": "#ffdad6", "error": "#ba1a1a", "tertiary": "#005338", "on-surface": "#0b1c30", "on-secondary-fixed-variant": "#004c6e", "inverse-on-surface": "#eaf1ff", "tertiary-fixed": "#6ffbbe", "on-primary": "#ffffff", "surface-container": "#e5eeff", "surface-bright": "#f8f9ff", "on-primary-fixed-variant": "#3323cc", "on-primary-container": "#dad7ff", "on-primary-fixed": "#0f0069", "surface-tint": "#4d44e3", "on-secondary-fixed": "#001e2f", "outline": "#777587", "on-surface-variant": "#464555", "surface-container-low": "#eff4ff", "tertiary-fixed-dim": "#4edea3", "inverse-surface": "#213145", "surface": "#f8f9ff", "on-tertiary-container": "#67f4b7", "secondary": "#006591" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-lg": "1.25rem", "space-sm": "0.5rem", "margin-lg": "2rem", "margin-md": "1.5rem", "gutter": "1rem", "margin": "1rem", "space-xl": "2rem", "space-md": "0.75rem", "space-xs": "0.25rem", "gutter-lg": "1.5rem" }, "fontFamily": { "body-md": ["Geist"], "body-sm": ["Geist"], "label-md": ["JetBrains Mono"], "headline-xl-mobile": ["Geist"], "headline-lg": ["Geist"], "headline-sm": ["Geist"], "headline-md": ["Geist"], "label-sm": ["JetBrains Mono"], "body-lg": ["Geist"], "headline-xl": ["Geist"], "caption": ["Geist"], "headline-lg-mobile": ["Geist"] }, "fontSize": { "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }], "headline-xl-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400" }], "headline-xl": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600" }], "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }] } } } };</script>
+    <div class="">
+        <header
+            class="fixed top-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl border-b border-surface-container-high">
+            <div class="flex items-center gap-space-lg flex-1 min-w-0">
+                <div class="flex items-center gap-space-sm shrink-0 cursor-pointer" onclick="switchAppTab('catalog')">
+                    <img alt="OpsHub Logo" class="h-8 w-8 object-contain rounded-lg"
+                        src="https://lh3.googleusercontent.com/aida/AEtjO1XcOzXIbb_MtLsaT_fDH6Xu9L2nXaws0PHKfLmjtOMBcnTuwYtRQOUUWDXJ1R2YW32j64ATssAibcM7IX769AnEtGvkrnnqB1-BzSWXH3lmoxbFGE5JXJAt3DJC2Vj98KLoMf73BbXAnbd8G0yPVXKWoCS5Wks7m1xkfIGc2S_-xJ5r-oueJ6mP0cZ9a2rDDihVs4VLnovrGbE_5cjNE7OGUJ6vdRzVBUvPa_IhmecHjBaIroXfZyHXNtM"><span
+                        class="font-headline-sm text-headline-sm text-on-surface tracking-tight font-semibold">OpsHub</span>
+                </div>
+                <div class="relative flex-1 max-w-xs xl:max-w-sm hidden sm:flex items-center"><span
+                        class="material-symbols-outlined absolute left-space-md text-on-surface-variant text-[20px]">search</span><input
+                        class="w-full h-9 bg-surface-container-lowest rounded-lg pl-9 pr-10 text-on-surface font-body-sm text-body-sm placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-1 focus:ring-primary shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+                        placeholder="Search requests, tickets, KB..." type="text">
+                </div>
+                <nav class="flex items-center gap-1 overflow-x-auto no-scrollbar py-1"><button
+                        class="app-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-body-sm text-body-sm whitespace-nowrap transition-all bg-primary-container text-on-primary font-semibold shadow-sm"
+                        data-tab="catalog" onclick="switchAppTab('catalog')"><span
+                            class="material-symbols-outlined text-[18px]">grid_view</span><span class="">Services &amp;
+                            Requests</span></button><button
+                        class="app-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all whitespace-nowrap"
+                        data-tab="myrequests" onclick="switchAppTab('myrequests')"><span
+                            class="material-symbols-outlined text-[18px]">receipt_long</span><span class="">My Requests</span><span
+                            class="px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface text-[11px] font-label-sm">4</span></button><button
+                        class="app-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all whitespace-nowrap"
+                        data-tab="teamqueue" onclick="switchAppTab('teamqueue')"><span
+                            class="material-symbols-outlined text-[18px]">fact_check</span><span class="">Approvals
+                            &amp; Fulfillment</span><span
+                            class="px-1.5 py-0.2 rounded-full bg-error text-on-error font-label-sm text-[11px] font-bold">3</span></button><button
+                        class="app-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all whitespace-nowrap"
+                        data-tab="reports" onclick="switchAppTab('reports')"><span
+                            class="material-symbols-outlined text-[18px]">monitoring</span><span class="">Analytics
+                            &amp; Reports</span></button><button
+                        class="app-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all whitespace-nowrap"
+                        data-tab="config" onclick="switchAppTab('config')"><span
+                            class="material-symbols-outlined text-[18px]">tune</span><span class="">Configuration Settings</span></button></nav>
+            </div>
+            <div class="flex items-center gap-space-md shrink-0 ml-space-md"><button aria-label="Notifications"
+                    class="relative p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors"><span
+                        class="material-symbols-outlined text-[22px]">notifications</span><span
+                        class="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-error text-on-error font-label-sm text-label-sm text-[10px] leading-none font-bold">2</span></button><button
+                    aria-label="Operational Help"
+                    class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors hidden md:block"><span
+                        class="material-symbols-outlined text-[22px]">help</span></button>
+                <div class="flex items-center gap-space-sm pl-space-xs">
+                    <div class="flex flex-col text-right hidden sm:flex"><span
+                            class="font-body-sm text-body-sm font-semibold text-on-surface leading-snug">Alex
+                            Morgan</span><span class="font-label-sm text-label-sm text-on-surface-variant">SecOps
+                            Lead</span></div><img alt="Profile"
+                        class="w-8 h-8 rounded-full object-cover shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+                        src="">
+                </div>
+            </div>
+        </header>
+        <main class="w-full pt-16 bg-surface min-h-screen px-gutter-lg pb-margin-lg">
+            <div class="flex flex-col w-full">
+                <!-- TAB 1: SERVICE CATALOG & SUBMIT FORM -->
+                <section class="tab-pane flex flex-col gap-space-lg" id="pane-catalog">
+                                    <!-- Top Navigation & Execution Hub -->
+                <div class="sticky top-0 z-30 bg-surface/95 backdrop-blur-md pt-2 pb-3 mb-space-md">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-sm">
+                        <div>
+                            <div
+                                class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
+                                <span class="">OPERATIONS CONTROL HUB</span>
+                            </div>
+                            <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Service
+                                Orchestration &amp; Multi-Team Fulfillment</h1>
+                        </div>
+                        <div class="flex items-center gap-space-sm self-start md:self-auto">
+                            <div
+                                class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm shadow-sm">
+                                <span class="w-2 h-2 rounded-full bg-tertiary-container animate-ping"></span>
+                                <span class="">Sync Engine: Active</span>
+                            </div>
+                            <button
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-95 transition-all"
+                                id="global-new-req-btn" onclick="switchAppTab('catalog')">
+                                <span class="material-symbols-outlined text-[18px]">add</span>
+                                <span class="">Initiate Request</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Nav Tab Controller -->
+
+                </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+                        <div
+                            class="lg:col-span-7 bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-primary/20 flex flex-col justify-between gap-space-sm bg-gradient-to-br from-surface-container-lowest via-surface-container-lowest to-primary-fixed/20">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="p-1.5 rounded-lg bg-primary text-on-primary flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-[20px]">auto_awesome</span></div>
+                                    <div><span
+                                            class="font-headline-sm text-headline-sm font-semibold text-on-surface block">AI
+                                            Request Copilot</span><span
+                                            class="font-caption text-caption text-on-surface-variant">Natural language
+                                            ticket drafting with automated routing &amp; specs</span></div>
+                                </div><span
+                                    class="px-2 py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm font-semibold flex items-center gap-1"><span
+                                        class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>OpsBot
+                                    Active</span>
+                            </div>
+                            <div class="flex items-center gap-2 pt-1">
+                                <div class="relative flex-1"><span
+                                        class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]">chat</span><input
+                                        class="w-full h-10 bg-surface-container-low rounded-lg pl-9 pr-3 text-on-surface font-body-sm text-body-sm placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                                        id="ai-request-input"
+                                        placeholder="Tell OpsBot what you need... (e.g. 'I need a 4K monitor and docking station for desk 4B')"
+                                        type="text"></div><button
+                                    class="h-10 px-4 rounded-lg bg-primary text-on-primary font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-95 transition-all flex items-center gap-1.5 whitespace-nowrap"
+                                    onclick="showToast('AI drafted ticket draft based on your prompt!')"><span
+                                        class="material-symbols-outlined text-[18px]">send</span><span class="">Draft
+                                        Request</span></button>
+                            </div>
+                        </div>
+                        <div
+                            class="lg:col-span-5 bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between gap-space-sm">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="p-1.5 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-[20px]">edit_note</span></div>
+                                    <div><span
+                                            class="font-headline-sm text-headline-sm font-semibold text-on-surface block">Create
+                                            Manually / Custom Request</span><span
+                                            class="font-caption text-caption text-on-surface-variant">Browse catalog
+                                            specifications or fill custom fulfillment forms</span></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 pt-1"><button
+                                    class="flex-1 h-10 px-3 rounded-lg bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold hover:bg-surface-container transition-colors flex items-center justify-center gap-1.5"
+                                    onclick="showToast('Loaded blank custom ticket builder')"><span
+                                        class="material-symbols-outlined text-[18px]">add_circle</span><span
+                                        class="">Custom Blank Ticket</span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Filter Pills & Search Bar -->
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button
+                                class="catalog-filter-pill px-3 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm shadow-sm transition-all"
+                                onclick="filterCatalog('all', this)">All Portals (24)</button>
+                            <button
+                                class="catalog-filter-pill px-3 py-1 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all"
+                                onclick="filterCatalog('it', this)">IT &amp; Hardware</button>
+                            <button
+                                class="catalog-filter-pill px-3 py-1 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all"
+                                onclick="filterCatalog('hr', this)">People &amp; HR</button>
+                            <button
+                                class="catalog-filter-pill px-3 py-1 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all"
+                                onclick="filterCatalog('facilities', this)">Facilities &amp; Workplace</button>
+                            <button
+                                class="catalog-filter-pill px-3 py-1 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all"
+                                onclick="filterCatalog('finance', this)">Finance &amp; Cards</button>
+                            <button
+                                class="catalog-filter-pill px-3 py-1 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all"
+                                onclick="filterCatalog('legal', this)">Legal &amp; Compliance</button>
+                        </div>
+                        <div
+                            class="flex items-center gap-space-sm bg-surface-container-lowest px-3 py-1.5 rounded-lg shadow-sm">
+                            <span class="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+                            <input
+                                class="bg-transparent text-body-sm font-body-sm focus:outline-none w-56 text-on-surface placeholder:text-on-surface-variant/60"
+                                id="catalog-search" placeholder="Quick find service template..." type="text">
+                        </div>
+                    </div>
+                    <!-- Catalog Split-View Layout: Cards Grid + Interactive Submission Drawer -->
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-space-md items-stretch">
+                        <div class="catalog-card group relative p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between border border-primary/20 bg-gradient-to-br from-surface-container-lowest via-surface-container-lowest to-primary-fixed/20"
+                            onclick="showToast('Opened IT Hardware Request Form')">
+                            <div class="flex items-start justify-between mb-space-sm">
+                                <div class="p-2.5 rounded-lg bg-primary-fixed text-on-primary-fixed"><span
+                                        class="material-symbols-outlined text-[24px]">laptop_mac</span></div><span
+                                    class="px-2 py-0.5 rounded-full font-label-sm text-label-sm bg-surface-container-high text-on-surface">IT
+                                    Hardware</span>
+                            </div>
+                            <h3
+                                class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">
+                                New Laptop &amp; Peripherals</h3>
+                            <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+                                Standard issue developer MacBook M3 Pro, dual monitors, mechanical docks, or ergonomic
+                                workstation kit.</p>
+                            <div
+                                class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-2 border-t border-surface-container-high/60 mt-auto">
+                                <span class="flex items-center gap-1"><span
+                                        class="material-symbols-outlined text-[14px]">timer</span> 48h SLA</span><span
+                                    class="text-primary font-semibold flex items-center gap-0.5">Configure <span
+                                        class="material-symbols-outlined text-[14px]">arrow_forward</span></span></div>
+                        </div>
+                        <div class="catalog-card group relative p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between"
+                            onclick="showToast('Opened HR PTO Request Form')">
+                            <div class="flex items-start justify-between mb-space-sm">
+                                <div class="p-2.5 rounded-lg bg-surface-container text-on-surface"><span
+                                        class="material-symbols-outlined text-[24px]">event_available</span></div><span
+                                    class="px-2 py-0.5 rounded-full font-label-sm text-label-sm bg-surface-container-high text-on-surface">HR
+                                    &amp; People</span>
+                            </div>
+                            <h3
+                                class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">
+                                PTO &amp; Leave Exception</h3>
+                            <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+                                Emergency rollover, sabbatical applications, parental leaves, or exceptional bereavement
+                                support.</p>
+                            <div
+                                class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-2 border-t border-surface-container-high/60 mt-auto">
+                                <span class="flex items-center gap-1"><span
+                                        class="material-symbols-outlined text-[14px]">device_hub</span> 2-Tier
+                                    Approval</span><span
+                                    class="text-on-surface font-semibold flex items-center gap-0.5">Configure <span
+                                        class="material-symbols-outlined text-[14px]">arrow_forward</span></span></div>
+                        </div>
+                        <div class="catalog-card group relative p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between"
+                            onclick="showToast('Opened Facilities Relocation Form')">
+                            <div class="flex items-start justify-between mb-space-sm">
+                                <div class="p-2.5 rounded-lg bg-surface-container text-on-surface"><span
+                                        class="material-symbols-outlined text-[24px]">desk</span></div><span
+                                    class="px-2 py-0.5 rounded-full font-label-sm text-label-sm bg-surface-container-high text-on-surface">Facilities</span>
+                            </div>
+                            <h3
+                                class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">
+                                Desk Relocation &amp; Ergonomics</h3>
+                            <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">Move
+                                desk pods across 4th floor, adjust standing converters, or ergonomic chair replacement.
+                            </p>
+                            <div
+                                class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-2 border-t border-surface-container-high/60 mt-auto">
+                                <span class="flex items-center gap-1 text-tertiary font-semibold"><span
+                                        class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span> Direct
+                                    Dispatch</span><span
+                                    class="text-on-surface font-semibold flex items-center gap-0.5">Configure <span
+                                        class="material-symbols-outlined text-[14px]">arrow_forward</span></span></div>
+                        </div>
+                        <div class="catalog-card group relative p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between"
+                            onclick="showToast('Opened Cloud Access Request Form')">
+                            <div class="flex items-start justify-between mb-space-sm">
+                                <div class="p-2.5 rounded-lg bg-surface-container text-on-surface"><span
+                                        class="material-symbols-outlined text-[24px]">cloud_sync</span></div><span
+                                    class="px-2 py-0.5 rounded-full font-label-sm text-label-sm bg-surface-container-high text-on-surface">IT
+                                    Infra</span>
+                            </div>
+                            <h3
+                                class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">
+                                Software License &amp; Cloud Access</h3>
+                            <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">AWS
+                                IAM elevated permissions, Datadog prod viewer tokens, Figma Enterprise, or GitHub
+                                Copilot seats.</p>
+                            <div
+                                class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-2 border-t border-surface-container-high/60 mt-auto">
+                                <span class="flex items-center gap-1"><span
+                                        class="material-symbols-outlined text-[14px]">verified</span> Auto-Security
+                                    Scan</span><span
+                                    class="text-on-surface font-semibold flex items-center gap-0.5">Configure <span
+                                        class="material-symbols-outlined text-[14px]">arrow_forward</span></span></div>
+                        </div>
+                        <div class="catalog-card group relative p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between"
+                            onclick="showToast('Opened Corporate Card Uplift Form')">
+                            <div class="flex items-start justify-between mb-space-sm">
+                                <div class="p-2.5 rounded-lg bg-surface-container text-on-surface"><span
+                                        class="material-symbols-outlined text-[24px]">credit_card</span></div><span
+                                    class="px-2 py-0.5 rounded-full font-label-sm text-label-sm bg-surface-container-high text-on-surface">Finance</span>
+                            </div>
+                            <h3
+                                class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">
+                                Corporate Card Limit Increase</h3>
+                            <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+                                Temporary expense threshold uplift for client engagements, SaaS renewals, or emergency
+                                vendor tooling.</p>
+                            <div
+                                class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-2 border-t border-surface-container-high/60 mt-auto">
+                                <span class="flex items-center gap-1"><span
+                                        class="material-symbols-outlined text-[14px]">account_balance</span> Finance
+                                    Approval</span><span
+                                    class="text-on-surface font-semibold flex items-center gap-0.5">Configure <span
+                                        class="material-symbols-outlined text-[14px]">arrow_forward</span></span></div>
+                        </div>
+                        <div class="catalog-card group relative p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between"
+                            onclick="showToast('Opened Contract Review Request Form')">
+                            <div class="flex items-start justify-between mb-space-sm">
+                                <div class="p-2.5 rounded-lg bg-surface-container text-on-surface"><span
+                                        class="material-symbols-outlined text-[24px]">gavel</span></div><span
+                                    class="px-2 py-0.5 rounded-full font-label-sm text-label-sm bg-surface-container-high text-on-surface">Legal
+                                    &amp; Compliance</span>
+                            </div>
+                            <h3
+                                class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">
+                                Vendor NDA &amp; Contract Review</h3>
+                            <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+                                Standard mutual non-disclosure agreement vetting, master service agreement addendums,
+                                and DPA verification.</p>
+                            <div
+                                class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-2 border-t border-surface-container-high/60 mt-auto">
+                                <span class="flex items-center gap-1"><span
+                                        class="material-symbols-outlined text-[14px]">timer</span> 72h SLA</span><span
+                                    class="text-on-surface font-semibold flex items-center gap-0.5">Configure <span
+                                        class="material-symbols-outlined text-[14px]">arrow_forward</span></span></div>
+                        </div>
+                        <div class="catalog-card group relative p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between"
+                            onclick="showToast('Opened Building Access Pass Form')">
+                            <div class="flex items-start justify-between mb-space-sm">
+                                <div class="p-2.5 rounded-lg bg-surface-container text-on-surface"><span
+                                        class="material-symbols-outlined text-[24px]">badge</span></div><span
+                                    class="px-2 py-0.5 rounded-full font-label-sm text-label-sm bg-surface-container-high text-on-surface">Facilities</span>
+                            </div>
+                            <h3
+                                class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">
+                                Office Badge &amp; Keycard Provisioning</h3>
+                            <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">New
+                                hire badge printing, lost keycard replacement, weekend building pass, and server cage
+                                badge access.</p>
+                            <div
+                                class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-2 border-t border-surface-container-high/60 mt-auto">
+                                <span class="flex items-center gap-1 text-tertiary font-semibold"><span
+                                        class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span> Instant
+                                    Provision</span><span
+                                    class="text-on-surface font-semibold flex items-center gap-0.5">Configure <span
+                                        class="material-symbols-outlined text-[14px]">arrow_forward</span></span></div>
+                        </div>
+                        <div class="catalog-card group relative p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between"
+                            onclick="showToast('Opened Ergonomic Assessment Request')">
+                            <div class="flex items-start justify-between mb-space-sm">
+                                <div class="p-2.5 rounded-lg bg-surface-container text-on-surface"><span
+                                        class="material-symbols-outlined text-[24px]">chair_alt</span></div><span
+                                    class="px-2 py-0.5 rounded-full font-label-sm text-label-sm bg-surface-container-high text-on-surface">Workplace</span>
+                            </div>
+                            <h3
+                                class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">
+                                Ergonomic Desk Assessment</h3>
+                            <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+                                On-site ergonomic specialist review for lumbar support, monitor arms, vertical mice, and
+                                standing mats.</p>
+                            <div
+                                class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-2 border-t border-surface-container-high/60 mt-auto">
+                                <span class="flex items-center gap-1"><span
+                                        class="material-symbols-outlined text-[14px]">timer</span> 5 Day SLA</span><span
+                                    class="text-on-surface font-semibold flex items-center gap-0.5">Configure <span
+                                        class="material-symbols-outlined text-[14px]">arrow_forward</span></span></div>
+                        </div>
+                    </div>
+                </section>
+                <!-- TAB 2: MY REQUESTS (Requester View) -->
+                <section class="tab-pane hidden flex flex-col gap-space-lg" id="pane-myrequests">
+                    <!-- Lifecycle Visual Pipeline Tracker -->
+                    <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="font-label-sm text-label-sm text-primary font-semibold">TICKET
+                                    TRACKER</span>
+                                <h2 class="font-headline-sm text-headline-sm text-on-surface">Active Request Pipeline:
+                                    #OPS-1042</h2>
+                            </div>
+                            <span
+                                class="px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">Step
+                                3 of 5 In Progress</span>
+                        </div>
+                        <!-- Pipeline Steps Graphic -->
+                        <div class="grid grid-cols-5 gap-2 relative">
+                            <div class="flex flex-col items-center text-center gap-1">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary flex items-center justify-center font-label-sm text-label-sm font-bold shadow-sm">
+                                    <span class="material-symbols-outlined text-[16px]">check</span>
+                                </div>
+                                <span class="font-body-sm text-body-sm font-semibold text-on-surface">Submitted</span>
+                                <span class="font-label-sm text-label-sm text-on-surface-variant">Oct 24, 09:15</span>
+                            </div>
+                            <div class="flex flex-col items-center text-center gap-1">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary flex items-center justify-center font-label-sm text-label-sm font-bold shadow-sm">
+                                    <span class="material-symbols-outlined text-[16px]">check</span>
+                                </div>
+                                <span class="font-body-sm text-body-sm font-semibold text-on-surface">Manager
+                                    Approved</span>
+                                <span class="font-label-sm text-label-sm text-on-surface-variant">Oct 24, 11:30</span>
+                            </div>
+                            <div class="flex flex-col items-center text-center gap-1">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-sm text-label-sm font-bold ring-4 ring-primary-fixed">
+                                    <span class="material-symbols-outlined text-[16px] animate-spin">sync</span>
+                                </div>
+                                <span class="font-body-sm text-body-sm font-semibold text-primary">In Fulfillment</span>
+                                <span class="font-label-sm text-label-sm text-primary">Dave Miller (IT)</span>
+                            </div>
+                            <div class="flex flex-col items-center text-center gap-1 opacity-45">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-label-sm text-label-sm font-bold">
+                                    4
+                                </div>
+                                <span class="font-body-sm text-body-sm font-semibold text-on-surface">Dispatched</span>
+                                <span class="font-label-sm text-label-sm text-on-surface-variant">Pending Prep</span>
+                            </div>
+                            <div class="flex flex-col items-center text-center gap-1 opacity-45">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-label-sm text-label-sm font-bold">
+                                    5
+                                </div>
+                                <span class="font-body-sm text-body-sm font-semibold text-on-surface">Closed</span>
+                                <span class="font-label-sm text-label-sm text-on-surface-variant">Final Sign-off</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- User Tickets Table -->
+                    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+                        <div class="p-space-md flex items-center justify-between bg-surface-container-low">
+                            <h3 class="font-headline-sm text-headline-sm text-on-surface">Submissions History &amp;
+                                Status</h3>
+                            <span class="font-label-sm text-label-sm text-on-surface-variant">4 Records Found</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left font-body-sm text-body-sm">
+                                <thead
+                                    class="bg-surface-container font-label-sm text-label-sm uppercase text-on-surface-variant">
+                                    <tr>
+                                        <th class="px-space-md py-2.5">Ticket ID</th>
+                                        <th class="px-space-md py-2.5">Title &amp; Classification</th>
+                                        <th class="px-space-md py-2.5">Submitted</th>
+                                        <th class="px-space-md py-2.5">Current Stage</th>
+                                        <th class="px-space-md py-2.5">SLA Target</th>
+                                        <th class="px-space-md py-2.5 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y-0 text-on-surface">
+                                    <tr class="hover:bg-surface-container-low cursor-pointer transition-colors"
+                                        onclick="switchAppTab('teamqueue')">
+                                        <td class="px-space-md py-3 font-label-sm text-label-sm font-bold text-primary">
+                                            #OPS-1042</td>
+                                        <td class="px-space-md py-3">
+                                            <div class="font-semibold text-on-surface">New Laptop &amp; Peripherals
+                                            </div>
+                                            <div class="text-caption text-on-surface-variant">MacBook Pro 16" M3 Pro
+                                            </div>
+                                        </td>
+                                        <td
+                                            class="px-space-md py-3 text-on-surface-variant font-label-sm text-label-sm">
+                                            Today, 09:15</td>
+                                        <td class="px-space-md py-3">
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                                                In Progress
+                                            </span>
+                                        </td>
+                                        <td class="px-space-md py-3">
+                                            <span class="font-label-sm text-label-sm text-tertiary font-semibold">28 hrs
+                                                remaining</span>
+                                        </td>
+                                        <td class="px-space-md py-3 text-right">
+                                            <span
+                                                class="px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">View
+                                                Trail</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+                                        <td class="px-space-md py-3 font-label-sm text-label-sm font-bold text-primary">
+                                            #OPS-1039</td>
+                                        <td class="px-space-md py-3">
+                                            <div class="font-semibold text-on-surface">Datadog Full Stack Seat</div>
+                                            <div class="text-caption text-on-surface-variant">Cloud Access &amp;
+                                                Permissions</div>
+                                        </td>
+                                        <td
+                                            class="px-space-md py-3 text-on-surface-variant font-label-sm text-label-sm">
+                                            Yesterday, 14:20</td>
+                                        <td class="px-space-md py-3">
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+                                                Pending Approval
+                                            </span>
+                                        </td>
+                                        <td class="px-space-md py-3">
+                                            <span class="font-label-sm text-label-sm text-on-surface-variant">14 hrs
+                                                remaining</span>
+                                        </td>
+                                        <td class="px-space-md py-3 text-right">
+                                            <span
+                                                class="px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">View
+                                                Trail</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+                                        <td class="px-space-md py-3 font-label-sm text-label-sm font-bold text-primary">
+                                            #OPS-998</td>
+                                        <td class="px-space-md py-3">
+                                            <div class="font-semibold text-on-surface">Desk Relocation to 4th Floor Pod
+                                                B</div>
+                                            <div class="text-caption text-on-surface-variant">Workplace Operations</div>
+                                        </td>
+                                        <td
+                                            class="px-space-md py-3 text-on-surface-variant font-label-sm text-label-sm">
+                                            Oct 18, 10:00</td>
+                                        <td class="px-space-md py-3">
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary-fixed text-tertiary font-label-sm text-label-sm font-semibold">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                                                Resolved
+                                            </span>
+                                        </td>
+                                        <td class="px-space-md py-3">
+                                            <span class="font-label-sm text-label-sm text-on-surface-variant">Fulfilled
+                                                in 6 hrs</span>
+                                        </td>
+                                        <td class="px-space-md py-3 text-right">
+                                            <span
+                                                class="px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">Audit
+                                                Closed</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-surface-container-low cursor-pointer transition-colors">
+                                        <td class="px-space-md py-3 font-label-sm text-label-sm font-bold text-primary">
+                                            #OPS-940</td>
+                                        <td class="px-space-md py-3">
+                                            <div class="font-semibold text-on-surface">Corporate Card Limit ($5,000)
+                                            </div>
+                                            <div class="text-caption text-on-surface-variant">Finance &amp; Cards</div>
+                                        </td>
+                                        <td
+                                            class="px-space-md py-3 text-on-surface-variant font-label-sm text-label-sm">
+                                            Oct 12, 16:45</td>
+                                        <td class="px-space-md py-3">
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary-fixed text-tertiary font-label-sm text-label-sm font-semibold">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                                                Resolved
+                                            </span>
+                                        </td>
+                                        <td class="px-space-md py-3">
+                                            <span
+                                                class="font-label-sm text-label-sm text-on-surface-variant">Completed</span>
+                                        </td>
+                                        <td class="px-space-md py-3 text-right">
+                                            <span
+                                                class="px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">Receipt
+                                                File</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <!-- TAB 3: TEAM QUEUE & FULFILLMENT (Agent Split Layout with Drawer) -->
+                <section class="tab-pane hidden flex flex-col gap-space-md" id="pane-teamqueue">
+                    <!-- Filters and Triage Bar -->
+                    <div
+                        class="flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-lowest p-space-sm rounded-xl shadow-sm">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div
+                                class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-container text-on-surface font-body-sm text-body-sm">
+                                <span
+                                    class="material-symbols-outlined text-[18px] text-on-surface-variant">filter_alt</span>
+                                <span class="font-semibold">Queue:</span>
+                                <select class="bg-transparent focus:outline-none cursor-pointer">
+                                    <option>IT Operations (Primary)</option>
+                                    <option>Facilities &amp; Space</option>
+                                    <option>SecOps Incident Mesh</option>
+                                </select>
+                            </div>
+                            <div
+                                class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-container text-on-surface font-body-sm text-body-sm">
+                                <span class="font-semibold">Priority:</span>
+                                <select class="bg-transparent focus:outline-none cursor-pointer">
+                                    <option>All Priorities</option>
+                                    <option>Urgent Only</option>
+                                    <option>High Priority</option>
+                                    <option>Standard</option>
+                                </select>
+                            </div>
+                            <div
+                                class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-container text-on-surface font-body-sm text-body-sm">
+                                <span class="font-semibold">Assignee:</span>
+                                <select class="bg-transparent focus:outline-none cursor-pointer">
+                                    <option>All Agents</option>
+                                    <option>Dave Miller (You)</option>
+                                    <option>Sarah Connor</option>
+                                    <option>Unassigned</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-label-sm text-label-sm text-on-surface-variant">Auto-Refresh in 12s</span>
+                            <button
+                                class="p-1.5 rounded bg-surface-container hover:bg-surface-container-high transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">refresh</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Two Columns: Queue Table + Open Interactive Drawer Panel -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
+                        <!-- Left: Queue Table (7 cols) -->
+                        <div
+                            class="lg:col-span-7 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+                            <div class="px-space-md py-3 bg-surface-container-low flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+                                    <span class="font-body-md text-body-md font-semibold text-on-surface">IT Operations
+                                        Active Stream</span>
+                                </div>
+                                <span class="font-label-sm text-label-sm text-on-surface-variant">Sorted by SLA
+                                    Urgency</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left font-body-sm text-body-sm">
+                                    <thead
+                                        class="bg-surface-container font-label-sm text-label-sm uppercase text-on-surface-variant">
+                                        <tr>
+                                            <th class="px-space-sm py-2">ID</th>
+                                            <th class="px-space-sm py-2">Title / Requester</th>
+                                            <th class="px-space-sm py-2">Priority</th>
+                                            <th class="px-space-sm py-2">Assignee</th>
+                                            <th class="px-space-sm py-2 text-right">Quick Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y-0 text-on-surface">
+                                        <!-- Selected Ticket Active Row -->
+                                        <tr class="bg-surface-container-high font-medium">
+                                            <td
+                                                class="px-space-sm py-2.5 font-label-sm text-label-sm text-primary font-bold">
+                                                #OPS-1042</td>
+                                            <td class="px-space-sm py-2.5">
+                                                <div class="text-on-surface font-semibold text-[13px]">New Laptop &amp;
+                                                    Peripherals</div>
+                                                <div class="text-on-surface-variant text-[11px]">Alex Morgan • SecOps
+                                                    Lead</div>
+                                            </td>
+                                            <td class="px-space-sm py-2.5">
+                                                <span
+                                                    class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">URGENT</span>
+                                            </td>
+                                            <td class="px-space-sm py-2.5">
+                                                <span class="font-body-sm text-body-sm text-primary font-semibold">Dave
+                                                    Miller</span>
+                                            </td>
+                                            <td class="px-space-sm py-2.5 text-right">
+                                                <button
+                                                    class="px-2 py-1 rounded bg-surface-container-lowest text-on-surface font-label-sm text-label-sm hover:bg-surface-container transition-colors mr-1"
+                                                    onclick="showToast('Assigned to Alex')">Reassign</button>
+                                                <button
+                                                    class="px-2 py-1 rounded bg-tertiary text-on-tertiary font-label-sm text-label-sm hover:opacity-90 transition-opacity"
+                                                    onclick="showToast('Marked Resolved')">Resolve</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-surface-container-low transition-colors">
+                                            <td
+                                                class="px-space-sm py-2.5 font-label-sm text-label-sm text-primary font-bold">
+                                                #OPS-1045</td>
+                                            <td class="px-space-sm py-2.5">
+                                                <div class="text-on-surface font-semibold text-[13px]">Production AWS
+                                                    Bastion Host Access</div>
+                                                <div class="text-on-surface-variant text-[11px]">David Chang • Cloud
+                                                    Engineer</div>
+                                            </td>
+                                            <td class="px-space-sm py-2.5">
+                                                <span
+                                                    class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">HIGH</span>
+                                            </td>
+                                            <td class="px-space-sm py-2.5">
+                                                <span
+                                                    class="font-body-sm text-body-sm text-on-surface-variant italic">Unassigned</span>
+                                            </td>
+                                            <td class="px-space-sm py-2.5 text-right">
+                                                <button
+                                                    class="px-2 py-1 rounded bg-primary text-on-primary font-label-sm text-label-sm hover:opacity-90 transition-opacity mr-1"
+                                                    onclick="showToast('Assigned to you!')">Assign to Me</button>
+                                                <button
+                                                    class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors"
+                                                    onclick="showToast('Need Info sent')">Clarify</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-surface-container-low transition-colors">
+                                            <td
+                                                class="px-space-sm py-2.5 font-label-sm text-label-sm text-primary font-bold">
+                                                #OPS-1049</td>
+                                            <td class="px-space-sm py-2.5">
+                                                <div class="text-on-surface font-semibold text-[13px]">Replace YubiKey
+                                                    Hardware Token</div>
+                                                <div class="text-on-surface-variant text-[11px]">Rachel Zane • Legal
+                                                    Counsel</div>
+                                            </td>
+                                            <td class="px-space-sm py-2.5">
+                                                <span
+                                                    class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">MEDIUM</span>
+                                            </td>
+                                            <td class="px-space-sm py-2.5">
+                                                <span class="font-body-sm text-body-sm text-on-surface">Sarah
+                                                    Connor</span>
+                                            </td>
+                                            <td class="px-space-sm py-2.5 text-right">
+                                                <button
+                                                    class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors mr-1">Reassign</button>
+                                                <button
+                                                    class="px-2 py-1 rounded bg-tertiary text-on-tertiary font-label-sm text-label-sm hover:opacity-90 transition-opacity">Resolve</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-surface-container-low transition-colors">
+                                            <td
+                                                class="px-space-sm py-2.5 font-label-sm text-label-sm text-primary font-bold">
+                                                #OPS-1051</td>
+                                            <td class="px-space-sm py-2.5">
+                                                <div class="text-on-surface font-semibold text-[13px]">External Monitor
+                                                    Color Calibration</div>
+                                                <div class="text-on-surface-variant text-[11px]">Marcus Vance • UI
+                                                    Designer</div>
+                                            </td>
+                                            <td class="px-space-sm py-2.5">
+                                                <span
+                                                    class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">LOW</span>
+                                            </td>
+                                            <td class="px-space-sm py-2.5">
+                                                <span
+                                                    class="font-body-sm text-body-sm text-on-surface-variant italic">Unassigned</span>
+                                            </td>
+                                            <td class="px-space-sm py-2.5 text-right">
+                                                <button
+                                                    class="px-2 py-1 rounded bg-primary text-on-primary font-label-sm text-label-sm hover:opacity-90 transition-opacity"
+                                                    onclick="showToast('Assigned to you!')">Assign to Me</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- Right: Operational Detail Drawer (5 cols) -->
+                        <div
+                            class="lg:col-span-5 bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+                            <div class="flex items-center justify-between pb-2 bg-surface-container-low p-2 rounded-lg">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="font-label-sm text-label-sm font-bold text-primary">#OPS-1042</span>
+                                        <span
+                                            class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">URGENT</span>
+                                    </div>
+                                    <h3 class="font-headline-sm text-headline-sm text-on-surface">New Laptop &amp;
+                                        Peripherals</h3>
+                                </div>
+                                <button
+                                    class="p-1 rounded text-on-surface-variant hover:bg-surface-container transition-colors"
+                                    onclick="showToast('Drawer minimized')">
+                                    <span class="material-symbols-outlined text-[20px]">close_fullscreen</span>
+                                </button>
+                            </div>
+                            <!-- Requester Profile Summary -->
+                            <div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low">
+                                <div class="flex items-center gap-2.5">
+                                    <img class="w-10 h-10 rounded-full object-cover"
+                                        data-alt="Corporate headshot of an Asian woman in modern business casual attire looking confident in an office environment with warm natural sunlight"
+                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOryR2HrPQJmYtbrGRjSLhltGXy6Le2PW2N2IPKI4Q8C8tKRxJ1tqXKMDmUF_CCWNTLs_1RAAXT23dTki6OGJ_hGFqp919Q8tOxq_WvOi0iWvAX64Bgt6OQ3lL_4duyefilmLP98XmQ5r1pZ50WM6zpBTCkxIDb4ENvzMJIe8OLRIAoIiFARylSsLiFIBMvPzLlX97oWaGOfrR1UHTr5pp_a2qkm8Kza38BxQ8BvchXCFjRrqWGd6Y">
+                                    <div>
+                                        <span class="font-body-sm text-body-sm font-semibold text-on-surface">Alex
+                                            Morgan</span>
+                                        <div class="font-label-sm text-label-sm text-on-surface-variant">SecOps Lead •
+                                            Team Delta</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-label-sm text-label-sm text-tertiary font-semibold">SLA: 28h
+                                        Left</span>
+                                    <div class="font-caption text-caption text-on-surface-variant">Cost: $3,450.00</div>
+                                </div>
+                            </div>
+                            <!-- Submitted Payload Details -->
+                            <div class="flex flex-col gap-1 text-body-sm font-body-sm">
+                                <span
+                                    class="font-label-sm text-label-sm uppercase text-on-surface-variant font-semibold">Custom
+                                    Payload Fields</span>
+                                <div
+                                    class="p-2.5 rounded-lg bg-surface-container-low flex flex-col gap-1.5 font-label-sm text-label-sm">
+                                    <div class="flex justify-between"><span class="text-on-surface-variant">Hardware
+                                            Model:</span> <span class="font-semibold text-on-surface">MacBook Pro 16"
+                                            (M3 Pro 36GB)</span></div>
+                                    <div class="flex justify-between"><span class="text-on-surface-variant">Charge
+                                            Center:</span> <span
+                                            class="text-on-surface font-semibold">SEC-CORP-991</span></div>
+                                    <div class="flex justify-between"><span class="text-on-surface-variant">File
+                                            Attachment:</span> <span
+                                            class="text-primary font-semibold underline cursor-pointer">asset_quote.pdf
+                                            (348 KB)</span></div>
+                                </div>
+                            </div>
+                            <!-- Audit Trail Timeline -->
+                            <div class="flex flex-col gap-1">
+                                <span
+                                    class="font-label-sm text-label-sm uppercase text-on-surface-variant font-semibold">Audit
+                                    Trail &amp; Sign-offs</span>
+                                <div
+                                    class="flex flex-col gap-2 p-2 rounded-lg bg-surface-container-low font-label-sm text-label-sm">
+                                    <div class="flex items-start gap-2">
+                                        <span
+                                            class="material-symbols-outlined text-tertiary text-[16px] mt-0.5">check_circle</span>
+                                        <div>
+                                            <span class="font-semibold text-on-surface">Ticket Created by Alex
+                                                Morgan</span>
+                                            <p class="text-on-surface-variant text-[11px]">Today at 09:15 AM</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span
+                                            class="material-symbols-outlined text-tertiary text-[16px] mt-0.5">check_circle</span>
+                                        <div>
+                                            <span class="font-semibold text-on-surface">Approved by Sarah Connor
+                                                (Mgr)</span>
+                                            <p class="text-on-surface-variant text-[11px]">14m ago • "Budget
+                                                pre-approved under Q3 security refresh."</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span
+                                            class="material-symbols-outlined text-primary text-[16px] mt-0.5">play_circle</span>
+                                        <div>
+                                            <span class="font-semibold text-primary">Assigned to Dave Miller (IT
+                                                Ops)</span>
+                                            <p class="text-on-surface-variant text-[11px]">Just now • Hardware stock
+                                                reserved in SF Cage 2</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Public / Internal Comment Dispatcher -->
+                            <div class="flex flex-col gap-2 pt-1">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-1 bg-surface-container p-0.5 rounded-lg">
+                                        <button
+                                            class="px-2.5 py-1 rounded-md text-on-surface font-label-sm text-label-sm font-semibold bg-surface-container-lowest shadow-sm transition-all"
+                                            id="btn-note-internal" onclick="setCommentMode('internal')">Internal
+                                            Note</button>
+                                        <button
+                                            class="px-2.5 py-1 rounded-md text-on-surface-variant font-label-sm text-label-sm hover:text-on-surface transition-all"
+                                            id="btn-note-reply" onclick="setCommentMode('reply')">Reply to
+                                            Requester</button>
+                                    </div>
+                                    <span class="text-caption text-on-surface-variant" id="note-privacy-hint">Only
+                                        visible to Agents</span>
+                                </div>
+                                <div class="relative">
+                                    <textarea
+                                        class="w-full bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded-lg p-2.5 focus:outline-none focus:bg-surface-container-lowest shadow-sm resize-none"
+                                        id="comment-input" placeholder="Add confidential internal fulfillment note..."
+                                        rows="2"></textarea>
+                                    <button
+                                        class="absolute bottom-2 right-2 px-3 py-1 bg-primary text-on-primary font-body-sm text-body-sm font-semibold rounded-lg shadow-sm hover:opacity-90 transition-all flex items-center gap-1"
+                                        onclick="postComment()">
+                                        <span class="">Send</span>
+                                        <span class="material-symbols-outlined text-[14px]">send</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- TAB 4: APPROVALS PORTAL (3 Pending Items) -->
+                <section class="tab-pane hidden flex flex-col gap-space-lg" id="pane-approvals">
+                    <!-- Attention Banner -->
+                    <div
+                        class="p-space-md rounded-xl bg-error-container text-on-error-container shadow-sm flex items-center justify-between">
+                        <div class="flex items-center gap-space-sm">
+                            <span class="material-symbols-outlined text-[28px]">pending_actions</span>
+                            <div>
+                                <h2 class="font-headline-sm text-headline-sm font-bold">3 Pending Requests Requiring
+                                    Your Explicit Sign-Off</h2>
+                                <p class="font-body-sm text-body-sm opacity-90">Outstanding approvals pause SLA
+                                    counters. Two items have secondary departmental routing next.</p>
+                            </div>
+                        </div>
+                        <button
+                            class="px-space-md py-2 rounded-lg bg-on-error-container text-on-error font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-90 transition-opacity whitespace-nowrap"
+                            onclick="bulkApproveAll()">
+                            Batch Review (3)
+                        </button>
+                    </div>
+                    <!-- Approvals Decision Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+                        <!-- Card 1 -->
+                        <div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between gap-space-md"
+                            id="approval-card-1">
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <span
+                                        class="px-2 py-0.5 rounded bg-primary-fixed text-primary font-label-sm text-label-sm font-bold">#OPS-1042</span>
+                                    <span class="font-label-sm text-label-sm text-on-surface-variant">Submitted 1h
+                                        ago</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">New Laptop &amp;
+                                    Peripherals</h3>
+                                <div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
+                                    <img class="w-8 h-8 rounded-full object-cover"
+                                        data-alt="Portrait photo of an executive male cybersecurity manager in a tailored jacket smiling slightly with soft studio lighting"
+                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSi6QYvupRxI6NKU9u3pE3OdQXlto78119nwiH1aUqbyS05dXM4K79w_kjNmJjf_KV1bV_uRM8fz14Vd2xp7VgG9RQJ5zRm2PNuopfWLklAFABUbE1HJxpzoKexpxwBQ_EKTU_sDfQfgJhTkQ9P0RUGuyLGGAB2JynHDCG9J8YrlnNXGlv2xrnwZHM9r8TDPXN-ek5g4i-q87j9U981B-DPy8QhqrTKNaFf5lzt3SpfDoMuUucvrmF">
+                                    <div>
+                                        <div class="font-body-sm text-body-sm font-semibold text-on-surface">Alex Morgan
+                                        </div>
+                                        <div class="font-caption text-caption text-on-surface-variant">SecOps Lead •
+                                            Security</div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="p-2.5 rounded-lg bg-surface-container-low font-label-sm text-label-sm flex flex-col gap-1">
+                                    <div class="flex justify-between"><span class="text-on-surface-variant">Estimated
+                                            Cost:</span> <span class="font-bold text-on-surface">$3,450.00 USD</span>
+                                    </div>
+                                    <div class="flex justify-between"><span
+                                            class="text-on-surface-variant">Hardware:</span> <span class="">MacBook Pro
+                                            M3 Pro</span></div>
+                                    <div class="flex justify-between"><span class="text-on-surface-variant">Next in
+                                            Chain:</span> <span class="text-primary font-semibold">Dave Miller (IT
+                                            Lead)</span></div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1.5 pt-2">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button
+                                        class="py-2 px-3 rounded-lg bg-tertiary text-on-tertiary font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-1"
+                                        onclick="approveRequest('approval-card-1')">
+                                        <span class="material-symbols-outlined text-[18px]">done_all</span> Approve
+                                    </button>
+                                    <button
+                                        class="py-2 px-3 rounded-lg bg-error text-on-error font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-1"
+                                        onclick="promptRejectModal('#OPS-1042', 'approval-card-1')">
+                                        <span class="material-symbols-outlined text-[18px]">close</span> Reject
+                                    </button>
+                                </div>
+                                <button
+                                    class="w-full py-1.5 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors"
+                                    onclick="showToast('Clarification ping sent to Alex')">
+                                    Request More Information
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between gap-space-md"
+                            id="approval-card-2">
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <span
+                                        class="px-2 py-0.5 rounded bg-primary-fixed text-primary font-label-sm text-label-sm font-bold">#OPS-1036</span>
+                                    <span class="font-label-sm text-label-sm text-on-surface-variant">Submitted 3h
+                                        ago</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Corporate Card Limit
+                                    ($10k)</h3>
+                                <div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
+                                    <img class="w-8 h-8 rounded-full object-cover"
+                                        data-alt="Portrait photo of a young Hispanic professional woman wearing glasses in a modern high-tech enterprise workspace"
+                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtAjlqULcV_KzZnMfMKzIsa8DAYileCPbJLrzsONEuvcaufvYYxapRAsKoXQ_a0uwAvz851fs2yp73nEjjxGcWZNahrjt02XX6GaT-Exm6-TckIbaaq_iNFCL8VsTXoEsEI_9sd6XSYRgQ4pM3YZQsLrklKv72Dg18H5PnYiVU7VBrzJmOC0GUi4GhHMP2vBD1J5vAmizHAzzyhlqMqW_-EtSuFFt3QQhJZFM2OOBzrFjDJ-jhHjk_">
+                                    <div>
+                                        <div class="font-body-sm text-body-sm font-semibold text-on-surface">Elena
+                                            Rostova</div>
+                                        <div class="font-caption text-caption text-on-surface-variant">Director of
+                                            Marketing • Growth</div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="p-2.5 rounded-lg bg-surface-container-low font-label-sm text-label-sm flex flex-col gap-1">
+                                    <div class="flex justify-between"><span class="text-on-surface-variant">Uplift
+                                            Target:</span> <span class="font-bold text-on-surface">$10,000 / mo</span>
+                                    </div>
+                                    <div class="flex justify-between"><span
+                                            class="text-on-surface-variant">Purpose:</span> <span class="">AWS Summit
+                                            Expo Booth</span></div>
+                                    <div class="flex justify-between"><span
+                                            class="text-on-surface-variant">Attached:</span> <span
+                                            class="text-primary underline">booth_invoice.pdf</span></div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1.5 pt-2">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button
+                                        class="py-2 px-3 rounded-lg bg-tertiary text-on-tertiary font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-1"
+                                        onclick="approveRequest('approval-card-2')">
+                                        <span class="material-symbols-outlined text-[18px]">done_all</span> Approve
+                                    </button>
+                                    <button
+                                        class="py-2 px-3 rounded-lg bg-error text-on-error font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-1"
+                                        onclick="promptRejectModal('#OPS-1036', 'approval-card-2')">
+                                        <span class="material-symbols-outlined text-[18px]">close</span> Reject
+                                    </button>
+                                </div>
+                                <button
+                                    class="w-full py-1.5 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors"
+                                    onclick="showToast('Clarification ping sent to Elena')">
+                                    Request More Information
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Card 3 -->
+                        <div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between gap-space-md"
+                            id="approval-card-3">
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <span
+                                        class="px-2 py-0.5 rounded bg-primary-fixed text-primary font-label-sm text-label-sm font-bold">#OPS-1031</span>
+                                    <span class="font-label-sm text-label-sm text-on-surface-variant">Submitted 6h
+                                        ago</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">PTO Exception (Emergency
+                                    Roll)</h3>
+                                <div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
+                                    <img class="w-8 h-8 rounded-full object-cover"
+                                        data-alt="Corporate headshot of an African American engineer with glasses in front of server rack architecture background"
+                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlYR5JC0EdJLWIcAymsEhRnPh96w63NJxYyASd0qmBObpv3tsXel7fpEP5e2KJmQBrqg0vT_ny4erZUeaBWda9QcKem7DUXAB2b6d5XgydGh_pCG8F6H1hniaKjj0LKCgYp38gO-jAUqD6wsQinhgqZ-PhbsFR8aExl__qm4LjK8qkGyY3N1LWp9Nr-oJ2ptdSGPYh8Yc9SnbX2r_-bDip-mMLmByppLS8-77QA-4fkHntOyr-zUkO">
+                                    <div>
+                                        <div class="font-body-sm text-body-sm font-semibold text-on-surface">Kenji Sato
+                                        </div>
+                                        <div class="font-caption text-caption text-on-surface-variant">Senior SRE •
+                                            Reliability</div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="p-2.5 rounded-lg bg-surface-container-low font-label-sm text-label-sm flex flex-col gap-1">
+                                    <div class="flex justify-between"><span class="text-on-surface-variant">Days
+                                            Requested:</span> <span class="font-bold text-on-surface">6 Rollover
+                                            Days</span></div>
+                                    <div class="flex justify-between"><span
+                                            class="text-on-surface-variant">Reason:</span> <span class="">On-Call
+                                            Blackout Q4</span></div>
+                                    <div class="flex justify-between"><span class="text-on-surface-variant">Next
+                                            Step:</span> <span class="text-primary font-semibold">HR People Ops</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1.5 pt-2">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button
+                                        class="py-2 px-3 rounded-lg bg-tertiary text-on-tertiary font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-1"
+                                        onclick="approveRequest('approval-card-3')">
+                                        <span class="material-symbols-outlined text-[18px]">done_all</span> Approve
+                                    </button>
+                                    <button
+                                        class="py-2 px-3 rounded-lg bg-error text-on-error font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-1"
+                                        onclick="promptRejectModal('#OPS-1031', 'approval-card-3')">
+                                        <span class="material-symbols-outlined text-[18px]">close</span> Reject
+                                    </button>
+                                </div>
+                                <button
+                                    class="w-full py-1.5 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors"
+                                    onclick="showToast('Clarification ping sent to Kenji')">
+                                    Request More Information
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- TAB 5: REPORTS & SLAS (Metric Cards & Dynamic Visualization) -->
+                <section class="tab-pane hidden flex flex-col gap-space-lg" id="pane-reports">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+                        <div>
+                            <span class="font-label-sm text-label-sm text-primary font-semibold">SERVICE
+                                BENCHMARKS</span>
+                            <h2 class="font-headline-lg text-headline-lg text-on-surface">Multi-Queue Telemetry &amp;
+                                SLA Compliance</h2>
+                        </div>
+                        <div class="flex items-center gap-space-sm">
+                            <button
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface font-body-sm text-body-sm font-semibold shadow-sm hover:bg-surface-container-high transition-all"
+                                onclick="showToast('Exporting CSV / PDF data pipeline...')">
+                                <span class="material-symbols-outlined text-[18px]">ios_share</span>
+                                <span class="">Export CSV / PDF</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Metric KPI Bento -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+                        <div
+                            class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+                            <div class="flex items-center justify-between text-on-surface-variant">
+                                <span class="font-label-sm text-label-sm font-semibold uppercase">Total Volume</span>
+                                <span class="material-symbols-outlined text-[20px] text-primary">dynamic_feed</span>
+                            </div>
+                            <div class="pt-2">
+                                <span class="font-headline-xl text-headline-xl text-on-surface font-bold">1,248</span>
+                                <p class="font-body-sm text-body-sm text-tertiary flex items-center gap-1 pt-1">
+                                    <span class="material-symbols-outlined text-[16px]">trending_up</span> +14.2% vs
+                                    prior month
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+                            <div class="flex items-center justify-between text-on-surface-variant">
+                                <span class="font-label-sm text-label-sm font-semibold uppercase">Avg Resolution
+                                    Time</span>
+                                <span class="material-symbols-outlined text-[20px] text-primary">schedule</span>
+                            </div>
+                            <div class="pt-2">
+                                <span class="font-headline-xl text-headline-xl text-on-surface font-bold">4.2 hrs</span>
+                                <p class="font-body-sm text-body-sm text-tertiary flex items-center gap-1 pt-1">
+                                    <span class="material-symbols-outlined text-[16px]">arrow_downward</span> -18%
+                                    response time speedup
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+                            <div class="flex items-center justify-between text-on-surface-variant">
+                                <span class="font-label-sm text-label-sm font-semibold uppercase">SLA Compliance</span>
+                                <span class="material-symbols-outlined text-[20px] text-tertiary">check_circle</span>
+                            </div>
+                            <div class="pt-2">
+                                <span class="font-headline-xl text-headline-xl text-on-surface font-bold">96.4%</span>
+                                <p class="font-body-sm text-body-sm text-on-surface-variant pt-1">Target benchmark:
+                                    &gt;95.0%</p>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+                            <div class="flex items-center justify-between text-on-surface-variant">
+                                <span class="font-label-sm text-label-sm font-semibold uppercase">Backlog Queue
+                                    Count</span>
+                                <span class="material-symbols-outlined text-[20px] text-error">pending</span>
+                            </div>
+                            <div class="pt-2">
+                                <span class="font-headline-xl text-headline-xl text-on-surface font-bold">38
+                                    items</span>
+                                <p class="font-body-sm text-body-sm text-tertiary flex items-center gap-1 pt-1">Within
+                                    optimal capacity</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Charts & Distribution Breakdown -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+                        <!-- Department Breakdown Progress Bars (7 cols) -->
+                        <div
+                            class="lg:col-span-7 bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Volume Distribution by
+                                    Department</h3>
+                                <span class="font-label-sm text-label-sm text-on-surface-variant">Rolling 30 Days</span>
+                            </div>
+                            <div class="flex flex-col gap-space-sm pt-2">
+                                <div>
+                                    <div class="flex justify-between font-body-sm text-body-sm mb-1">
+                                        <span class="font-semibold text-on-surface">IT Support &amp;
+                                            Infrastructure</span>
+                                        <span class="font-label-sm text-label-sm text-on-surface-variant">420 tickets
+                                            (33.6%)</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+                                        <div class="h-full bg-primary rounded-full" style="width: 33.6%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between font-body-sm text-body-sm mb-1">
+                                        <span class="font-semibold text-on-surface">People Operations &amp; HR</span>
+                                        <span class="font-label-sm text-label-sm text-on-surface-variant">310 tickets
+                                            (24.8%)</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+                                        <div class="h-full bg-secondary rounded-full" style="width: 24.8%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between font-body-sm text-body-sm mb-1">
+                                        <span class="font-semibold text-on-surface">Facilities &amp; Workplace</span>
+                                        <span class="font-label-sm text-label-sm text-on-surface-variant">260 tickets
+                                            (20.8%)</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+                                        <div class="h-full bg-tertiary rounded-full" style="width: 20.8%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between font-body-sm text-body-sm mb-1">
+                                        <span class="font-semibold text-on-surface">Finance &amp; Corporate Cards</span>
+                                        <span class="font-label-sm text-label-sm text-on-surface-variant">180 tickets
+                                            (14.4%)</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+                                        <div class="h-full bg-primary-fixed-dim rounded-full" style="width: 14.4%">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between font-body-sm text-body-sm mb-1">
+                                        <span class="font-semibold text-on-surface">Legal &amp; Compliance Risk</span>
+                                        <span class="font-label-sm text-label-sm text-on-surface-variant">78 tickets
+                                            (6.4%)</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+                                        <div class="h-full bg-outline rounded-full" style="width: 6.4%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- SVG Mini Visualization Widget (5 cols) -->
+                        <div
+                            class="lg:col-span-5 bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between gap-space-md">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <h3 class="font-headline-sm text-headline-sm text-on-surface">SLA Attainment Trend
+                                    </h3>
+                                    <span
+                                        class="px-2 py-0.5 rounded bg-tertiary-fixed text-tertiary font-label-sm text-label-sm font-semibold">+1.8%</span>
+                                </div>
+                                <p class="font-body-sm text-body-sm text-on-surface-variant pt-1">Daily rate of requests
+                                    fulfilled before deadline.</p>
+                            </div>
+                            <!-- Inline SVG Sparkline / Area Chart -->
+                            <div class="w-full py-4 flex flex-col items-center">
+                                <svg class="w-full h-36 text-primary" fill="none" viewBox="0 0 300 100"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="slaGradient" x1="0" x2="0" y1="0" y2="1">
+                                            <stop offset="0%" stop-color="currentColor" stop-opacity="0.3"></stop>
+                                            <stop offset="100%" stop-color="currentColor" stop-opacity="0.0"></stop>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M0 70 Q 50 40, 100 55 T 200 25 T 300 15 L 300 100 L 0 100 Z"
+                                        fill="url(#slaGradient)"></path>
+                                    <path d="M0 70 Q 50 40, 100 55 T 200 25 T 300 15" stroke="currentColor"
+                                        stroke-linecap="round" stroke-width="3"></path>
+                                    <circle class="fill-surface-container-lowest" cx="200" cy="25" r="4"
+                                        stroke="currentColor" stroke-width="3"></circle>
+                                    <circle class="fill-tertiary" cx="300" cy="15" r="4" stroke="currentColor"
+                                        stroke-width="2"></circle>
+                                </svg>
+                                <div
+                                    class="flex items-center justify-between w-full font-label-sm text-label-sm text-on-surface-variant pt-2">
+                                    <span class="">Mon</span>
+                                    <span class="">Tue</span>
+                                    <span class="">Wed</span>
+                                    <span class="">Thu</span>
+                                    <span class="">Fri</span>
+                                    <span class="">Sat</span>
+                                    <span class="">Sun (98.2%)</span>
+                                </div>
+                            </div>
+                            <div
+                                class="p-2.5 rounded-lg bg-surface-container-low flex items-center justify-between text-on-surface font-body-sm text-body-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-tertiary text-[20px]">shield</span>
+                                    <span class="">Zero Breached P0 Emergencies</span>
+                                </div>
+                                <span class="font-label-sm text-label-sm font-bold text-tertiary">PERFECT</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- TAB 6: QUEUE OWNER & ROUTING CONFIGURATION -->
+                <section class="tab-pane hidden flex flex-col gap-space-lg" id="pane-config">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+                        <div>
+                            <span class="font-label-sm text-label-sm text-primary font-semibold">WORKFLOW
+                                ORCHESTRATION</span>
+                            <h2 class="font-headline-lg text-headline-lg text-on-surface">Queue Owner &amp; Routing
+                                Engine Builder</h2>
+                        </div>
+                        <button
+                            class="px-space-md py-2 rounded-lg bg-primary text-on-primary font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-95 transition-opacity flex items-center gap-1.5 self-start md:self-auto"
+                            onclick="showToast('Workflow specification saved!')">
+                            <span class="material-symbols-outlined text-[18px]">save</span>
+                            <span class="">Publish Workflow Version 3.4</span>
+                        </button>
+                    </div>
+                    <!-- Builder Workspace -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+                        <!-- Dynamic Form Field Builder (6 cols) -->
+                        <div
+                            class="lg:col-span-6 bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-headline-sm text-headline-sm text-on-surface">Custom Form Schema
+                                    </h3>
+                                    <p class="font-body-sm text-body-sm text-on-surface-variant">Fields rendered to the
+                                        requester for this category.</p>
+                                </div>
+                                <button
+                                    class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold hover:bg-surface-container transition-colors"
+                                    onclick="addCustomField()">
+                                    <span class="material-symbols-outlined text-[16px]">add</span> Add Field
+                                </button>
+                            </div>
+                            <!-- Field Items Container -->
+                            <div class="flex flex-col gap-2" id="dynamic-field-list">
+                                <!-- Field 1 -->
+                                <div
+                                    class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between gap-2 shadow-sm">
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="material-symbols-outlined text-on-surface-variant text-[20px] cursor-grab">drag_indicator</span>
+                                        <div>
+                                            <div class="font-body-sm text-body-sm font-semibold text-on-surface">
+                                                Hardware Specification</div>
+                                            <div class="font-label-sm text-label-sm text-on-surface-variant">Dropdown
+                                                Selector • Required • 3 Options</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <span
+                                            class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">DROPDOWN</span>
+                                        <button class="p-1 text-on-surface-variant hover:text-error transition-colors"
+                                            onclick="this.closest('.p-3').remove()">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Field 2 -->
+                                <div
+                                    class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between gap-2 shadow-sm">
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="material-symbols-outlined text-on-surface-variant text-[20px] cursor-grab">drag_indicator</span>
+                                        <div>
+                                            <div class="font-body-sm text-body-sm font-semibold text-on-surface">
+                                                Business Justification</div>
+                                            <div class="font-label-sm text-label-sm text-on-surface-variant">Long
+                                                Textarea • Required</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <span
+                                            class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">TEXTAREA</span>
+                                        <button class="p-1 text-on-surface-variant hover:text-error transition-colors"
+                                            onclick="this.closest('.p-3').remove()">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Field 3 -->
+                                <div
+                                    class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between gap-2 shadow-sm">
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="material-symbols-outlined text-on-surface-variant text-[20px] cursor-grab">drag_indicator</span>
+                                        <div>
+                                            <div class="font-body-sm text-body-sm font-semibold text-on-surface">Quote /
+                                                Invoice Attachment</div>
+                                            <div class="font-label-sm text-label-sm text-on-surface-variant">File
+                                                Dropzone (PDF, PNG) • Max 15MB</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <span
+                                            class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">FILE_UPLOAD</span>
+                                        <button class="p-1 text-on-surface-variant hover:text-error transition-colors"
+                                            onclick="this.closest('.p-3').remove()">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Routing Topology & Decision Tree Engine (6 cols) -->
+                        <div
+                            class="lg:col-span-6 bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+                            <div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Routing Strategy &amp;
+                                    Approvals Chain</h3>
+                                <p class="font-body-sm text-body-sm text-on-surface-variant">Define how ticket dispatch
+                                    behaves upon submission.</p>
+                            </div>
+                            <!-- Mode Toggle -->
+                            <div class="flex items-center gap-2 p-1 bg-surface-container rounded-lg">
+                                <button
+                                    class="flex-1 py-1.5 rounded text-on-surface font-label-sm text-label-sm font-semibold bg-surface-container-lowest shadow-sm transition-all text-center"
+                                    id="route-mode-seq" onclick="toggleRouteMode('seq')">Sequential Approval
+                                    Chain</button>
+                                <button
+                                    class="flex-1 py-1.5 rounded text-on-surface-variant font-label-sm text-label-sm transition-all text-center"
+                                    id="route-mode-direct" onclick="toggleRouteMode('direct')">Direct-to-Queue</button>
+                            </div>
+                            <!-- Sequential Steps Visualizer / Configurator -->
+                            <div class="flex flex-col gap-3" id="sequential-steps-box">
+                                <!-- Step 1 -->
+                                <div class="p-3 rounded-lg bg-surface-container-low flex flex-col gap-2">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                class="w-5 h-5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm flex items-center justify-center font-bold">1</span>
+                                            <span
+                                                class="font-body-sm text-body-sm font-semibold text-on-surface">Primary
+                                                Approval Gate</span>
+                                        </div>
+                                        <span
+                                            class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface">Linear
+                                            Condition</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 text-body-sm font-body-sm">
+                                        <select
+                                            class="bg-surface-container-lowest rounded p-1.5 text-on-surface font-body-sm text-body-sm focus:outline-none">
+                                            <option>Requester's Direct Manager</option>
+                                            <option>Department Head</option>
+                                            <option>Cost Center Owner</option>
+                                        </select>
+                                        <select
+                                            class="bg-surface-container-lowest rounded p-1.5 text-on-surface font-body-sm text-body-sm focus:outline-none">
+                                            <option>Timeout: 24h Auto-escalate</option>
+                                            <option>Timeout: 48h Halt</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex justify-center -my-1">
+                                    <span
+                                        class="material-symbols-outlined text-on-surface-variant text-[20px]">arrow_downward</span>
+                                </div>
+                                <!-- Step 2 -->
+                                <div class="p-3 rounded-lg bg-surface-container-low flex flex-col gap-2">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                class="w-5 h-5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm flex items-center justify-center font-bold">2</span>
+                                            <span
+                                                class="font-body-sm text-body-sm font-semibold text-on-surface">Secondary
+                                                Governance Gate</span>
+                                        </div>
+                                        <span
+                                            class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface">Conditional:
+                                            If &gt; $1,000</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 text-body-sm font-body-sm">
+                                        <select
+                                            class="bg-surface-container-lowest rounded p-1.5 text-on-surface font-body-sm text-body-sm focus:outline-none">
+                                            <option>IT Operations Lead (Dave Miller)</option>
+                                            <option>Finance VP</option>
+                                            <option>InfoSec Compliance Officer</option>
+                                        </select>
+                                        <select
+                                            class="bg-surface-container-lowest rounded p-1.5 text-on-surface font-body-sm text-body-sm focus:outline-none">
+                                            <option>Timeout: 48h Escalation</option>
+                                            <option>Timeout: Reject</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex justify-center -my-1">
+                                    <span
+                                        class="material-symbols-outlined text-on-surface-variant text-[20px]">arrow_downward</span>
+                                </div>
+                                <!-- Final Step -->
+                                <div
+                                    class="p-3 rounded-lg bg-tertiary-fixed text-tertiary flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+                                        <span class="font-body-sm text-body-sm font-bold">Fulfillment Target: IT
+                                            Hardware Dispatch Depot</span>
+                                    </div>
+                                    <span class="font-label-sm text-label-sm font-semibold">Ready for Queue</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- REJECTION REASON MODAL DIALOG -->
+                <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4"
+                    id="rejection-modal">
+                    <div
+                        class="bg-surface-container-lowest rounded-xl max-w-md w-full p-space-lg shadow-xl flex flex-col gap-space-md">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-error-container text-on-error-container flex items-center justify-center font-bold">
+                                    <span class="material-symbols-outlined text-[18px]">block</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline-sm text-headline-sm text-on-surface">Decline Request</h3>
+                                    <span class="font-label-sm text-label-sm text-primary font-semibold"
+                                        id="reject-ticket-tag">#OPS-1042</span>
+                                </div>
+                            </div>
+                            <button class="text-on-surface-variant hover:text-on-surface" onclick="closeRejectModal()">
+                                <span class="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+                        <div>
+                            <label class="block font-body-sm text-body-sm font-semibold text-on-surface mb-1">Mandatory
+                                Rejection Explanation *</label>
+                            <p class="font-caption text-caption text-on-surface-variant mb-2">This feedback is
+                                dispatched directly into the requester's notification thread.</p>
+                            <textarea
+                                class="w-full bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded-lg p-2.5 focus:outline-none focus:bg-surface-container-lowest shadow-sm resize-none"
+                                id="reject-reason-input"
+                                placeholder="State regulatory or policy grounds (e.g., Requested hardware tier exceeds Q3 department budget allocation)..."
+                                required="" rows="3"></textarea>
+                        </div>
+                        <div class="flex items-center justify-end gap-2 pt-2">
+                            <button
+                                class="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-body-sm text-body-sm font-semibold hover:bg-surface-container-high transition-colors"
+                                onclick="closeRejectModal()">
+                                Cancel
+                            </button>
+                            <button
+                                class="px-4 py-2 rounded-lg bg-error text-on-error font-body-sm text-body-sm font-semibold shadow-sm hover:opacity-95 transition-opacity"
+                                onclick="confirmRejection()">
+                                Confirm Decline
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- TOAST NOTIFICATION FLOATER -->
+                <div class="fixed bottom-6 right-6 z-50 hidden px-4 py-2.5 rounded-lg bg-inverse-surface text-inverse-on-surface font-body-sm text-body-sm shadow-xl flex items-center gap-2 transition-all"
+                    id="toast-floater">
+                    <span class="material-symbols-outlined text-tertiary-fixed text-[18px]">check_circle</span>
+                    <span id="toast-text" class="">Operation completed successfully</span>
+                </div>
+                <script>
+                    let activeRejectTargetCardId = null;
+
+                    function switchAppTab(tabKey) {
+                        document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+                        const activePane = document.getElementById('pane-' + tabKey);
+                        if (activePane) {
+                            activePane.classList.remove('hidden');
+                        }
+
+                        document.querySelectorAll('.app-tab-btn').forEach(btn => {
+                            if (btn.getAttribute('data-tab') === tabKey) {
+                                btn.className = 'app-tab-btn flex items-center gap-2 px-3 py-2 rounded-lg font-body-sm text-body-sm whitespace-nowrap transition-all bg-surface-container-lowest text-primary font-semibold shadow-sm';
+                            } else {
+                                btn.className = 'app-tab-btn flex items-center gap-2 px-3 py-2 rounded-lg font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface whitespace-nowrap transition-all';
+                            }
+                        });
+                    }
+
+                    function filterCatalog(category, buttonEl) {
+                        document.querySelectorAll('.catalog-filter-pill').forEach(pill => {
+                            pill.className = 'catalog-filter-pill px-3 py-1 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all';
+                        });
+                        buttonEl.className = 'catalog-filter-pill px-3 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm shadow-sm transition-all';
+                        showToast('Filtered catalog by: ' + category.toUpperCase());
+                    }
+
+                    function selectCatalogTemplate(type) {
+                        showToast('Loaded template form for ' + type);
+                    }
+
+                    function handleRequestSubmit(e) {
+                        e.preventDefault();
+                        showToast('Request submitted! Tracking ID: #OPS-' + Math.floor(1000 + Math.random() * 9000));
+                        setTimeout(() => switchAppTab('myrequests'), 800);
+                    }
+
+                    function setCommentMode(mode) {
+                        const btnInternal = document.getElementById('btn-note-internal');
+                        const btnReply = document.getElementById('btn-note-reply');
+                        const hint = document.getElementById('note-privacy-hint');
+                        const input = document.getElementById('comment-input');
+
+                        if (mode === 'internal') {
+                            btnInternal.className = 'px-2.5 py-1 rounded-md text-on-surface font-label-sm text-label-sm font-semibold bg-surface-container-lowest shadow-sm transition-all';
+                            btnReply.className = 'px-2.5 py-1 rounded-md text-on-surface-variant font-label-sm text-label-sm hover:text-on-surface transition-all';
+                            hint.textContent = 'Only visible to Agents';
+                            input.placeholder = 'Add confidential internal fulfillment note...';
+                        } else {
+                            btnReply.className = 'px-2.5 py-1 rounded-md text-on-surface font-label-sm text-label-sm font-semibold bg-surface-container-lowest shadow-sm transition-all';
+                            btnInternal.className = 'px-2.5 py-1 rounded-md text-on-surface-variant font-label-sm text-label-sm hover:text-on-surface transition-all';
+                            hint.textContent = 'Customer will receive email notification';
+                            input.placeholder = 'Reply to Alex Morgan...';
+                        }
+                    }
+
+                    function postComment() {
+                        const input = document.getElementById('comment-input');
+                        if (!input.value.trim()) return;
+                        showToast('Comment appended to ticket audit trail');
+                        input.value = '';
+                    }
+
+                    function approveRequest(cardId) {
+                        const card = document.getElementById(cardId);
+                        if (card) {
+                            card.style.opacity = '0.4';
+                            card.style.pointerEvents = 'none';
+                        }
+                        showToast('Approval registered. Dispatched to next gate.');
+                    }
+
+                    function promptRejectModal(ticketId, cardId) {
+                        activeRejectTargetCardId = cardId;
+                        document.getElementById('reject-ticket-tag').innerText = ticketId;
+                        document.getElementById('rejection-modal').classList.remove('hidden');
+                    }
+
+                    function closeRejectModal() {
+                        document.getElementById('rejection-modal').classList.add('hidden');
+                        document.getElementById('reject-reason-input').value = '';
+                    }
+
+                    function confirmRejection() {
+                        const reason = document.getElementById('reject-reason-input').value.trim();
+                        if (!reason) {
+                            alert('Please provide a rejection reason.');
+                            return;
+                        }
+                        if (activeRejectTargetCardId) {
+                            const card = document.getElementById(activeRejectTargetCardId);
+                            if (card) {
+                                card.remove();
+                            }
+                        }
+                        closeRejectModal();
+                        showToast('Ticket rejected with formal rationale dispatched.');
+                    }
+
+                    function bulkApproveAll() {
+                        ['approval-card-1', 'approval-card-2', 'approval-card-3'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.remove();
+                        });
+                        showToast('All 3 pending approvals cleared!');
+                    }
+
+                    function toggleRouteMode(mode) {
+                        const btnSeq = document.getElementById('route-mode-seq');
+                        const btnDirect = document.getElementById('route-mode-direct');
+                        const stepBox = document.getElementById('sequential-steps-box');
+
+                        if (mode === 'seq') {
+                            btnSeq.className = 'flex-1 py-1.5 rounded text-on-surface font-label-sm text-label-sm font-semibold bg-surface-container-lowest shadow-sm transition-all text-center';
+                            btnDirect.className = 'flex-1 py-1.5 rounded text-on-surface-variant font-label-sm text-label-sm transition-all text-center';
+                            stepBox.classList.remove('opacity-30', 'pointer-events-none');
+                        } else {
+                            btnDirect.className = 'flex-1 py-1.5 rounded text-on-surface font-label-sm text-label-sm font-semibold bg-surface-container-lowest shadow-sm transition-all text-center';
+                            btnSeq.className = 'flex-1 py-1.5 rounded text-on-surface-variant font-label-sm text-label-sm transition-all text-center';
+                            stepBox.classList.add('opacity-30', 'pointer-events-none');
+                            showToast('Switched to Direct-to-Queue bypass mode');
+                        }
+                    }
+
+                    function addCustomField() {
+                        const list = document.getElementById('dynamic-field-list');
+                        const newEl = document.createElement('div');
+                        newEl.className = 'p-3 rounded-lg bg-surface-container-low flex items-center justify-between gap-2 shadow-sm animate-pulse';
+                        newEl.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-on-surface-variant text-[20px] cursor-grab">drag_indicator</span>
+          <div>
+            <div class="font-body-sm text-body-sm font-semibold text-on-surface">Custom User Property #` + (list.children.length + 1) + `</div>
+            <div class="font-label-sm text-label-sm text-on-surface-variant">Single Line String &bull; Optional</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">TEXT</span>
+          <button onclick="this.closest('.p-3').remove()" class="p-1 text-on-surface-variant hover:text-error transition-colors">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+          </button>
+        </div>
+      `;
+                        list.appendChild(newEl);
+                        setTimeout(() => newEl.classList.remove('animate-pulse'), 400);
+                        showToast('Added new custom schema field');
+                    }
+
+                    function showToast(message) {
+                        const floater = document.getElementById('toast-floater');
+                        const text = document.getElementById('toast-text');
+                        text.innerText = message;
+                        floater.classList.remove('hidden');
+                        clearTimeout(window._toastTimeout);
+                        window._toastTimeout = setTimeout(() => {
+                            floater.classList.add('hidden');
+                        }, 3200);
+                    }
+                </script>
+            </div>
+        </main>
+    </div>
+
+</body>
+
+</html>
