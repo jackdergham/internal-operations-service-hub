@@ -1,13 +1,13 @@
-import { teamQueueRows } from '../data'
-import type { CommentMode } from '../types'
+import type { CommentMode, RoutingQueueItem } from '../types'
 
 type Props = {
   commentMode: CommentMode
   setCommentMode: (mode: CommentMode) => void
   showToast: (message: string) => void
+  queue: RoutingQueueItem[]
 }
 
-export default function TeamQueueView({ commentMode, setCommentMode, showToast }: Props) {
+export default function TeamQueueView({ commentMode, setCommentMode, showToast, queue }: Props) {
   return (
     <>
       <div className="queue-toolbar-row">
@@ -17,7 +17,7 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast }
           <button type="button" className="filter-button">Escalated</button>
         </div>
         <div className="toolbar-right">
-          <span>Auto-Refresh in 12s</span>
+          <span>Live backend data</span>
           <button type="button" className="secondary-action small" onClick={() => showToast('Manual refresh complete')}>
             <span className="material-symbols-outlined">refresh</span>
           </button>
@@ -28,7 +28,7 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast }
         <div className="queue-panel">
           <div className="table-header">
             <h3>Operational Queue</h3>
-            <span>4 active items</span>
+            <span>{queue.length} pending items</span>
           </div>
           <table>
             <thead>
@@ -41,13 +41,13 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast }
               </tr>
             </thead>
             <tbody>
-              {teamQueueRows.map((row) => (
-                <tr key={row.id} className="queue-row" onClick={() => showToast(`Opened ${row.id}`)}>
-                  <td><strong>{row.title}</strong><span className="ticket-id">{row.id}</span></td>
+              {queue.map((row) => (
+                <tr key={row.id} className="queue-row" onClick={() => showToast(`Opened ${row.requestId}`)}>
+                  <td><strong>{row.title}</strong><span className="ticket-id">{row.requestId}</span></td>
                   <td>{row.requester}</td>
-                  <td>{row.queue}</td>
+                  <td>{row.category}</td>
                   <td>{row.submitted}</td>
-                  <td><span className={`risk-badge ${row.risk.toLowerCase()}`}>{row.risk}</span></td>
+                  <td><span className="risk-badge medium">Pending</span></td>
                 </tr>
               ))}
             </tbody>
@@ -58,7 +58,7 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast }
           <div className="detail-header">
             <div>
               <div className="eyebrow-label">REQUEST DETAIL</div>
-              <h3>REQ-1842</h3>
+              <h3>{queue[0]?.requestId ?? 'No selection'}</h3>
             </div>
             <button type="button" className="secondary-action small" onClick={() => showToast('Ticket flagged for follow-up')}>
               <span className="material-symbols-outlined">flag</span>
@@ -68,16 +68,16 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast }
           <div className="requester-block">
             <div className="avatar small">NC</div>
             <div>
-              <strong>Nora Chen</strong>
-              <span>Platform Engineer</span>
+              <strong>{queue[0]?.requester ?? 'No pending requester'}</strong>
+                <span>{queue[0]?.category ?? 'Live routing queue'}</span>
             </div>
             <span className="mini-badge warning">Priority</span>
           </div>
 
           <div className="detail-copy">
-            <div><span>Request type</span><strong>Cloud Access Review</strong></div>
-            <div><span>Assigned queue</span><strong>Security / IAM</strong></div>
-            <div><span>Requested ETA</span><strong>Today, 15:00</strong></div>
+            <div><span>Request type</span><strong>{queue[0]?.title ?? 'No pending request'}</strong></div>
+            <div><span>Assigned queue</span><strong>{queue[0]?.category ?? 'Not assigned'}</strong></div>
+            <div><span>Submitted</span><strong>{queue[0]?.submitted ?? 'No pending request'}</strong></div>
           </div>
 
           <div className="comment-panel">
@@ -93,11 +93,7 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast }
             </button>
           </div>
 
-          <div className="timeline-block">
-            <div className="timeline-item"><span className="timeline-dot" /><div><strong>Review assigned</strong><small>09:10 AM</small></div></div>
-            <div className="timeline-item"><span className="timeline-dot" /><div><strong>Security check pending</strong><small>09:25 AM</small></div></div>
-            <div className="timeline-item"><span className="timeline-dot" /><div><strong>Awaiting sponsor approval</strong><small>09:41 AM</small></div></div>
-          </div>
+          {queue.length === 0 && <div className="empty-state">No pending routing decisions for this approver.</div>}
         </aside>
       </div>
     </>

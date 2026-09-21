@@ -82,6 +82,7 @@ button {
 .topbar-left,
 .topbar-right,
 .profile-pill,
+.acting-user-picker,
 .main-tabs,
 .banner-actions,
 .catalog-toolbar,
@@ -114,6 +115,24 @@ button {
 
 .topbar-right {
   gap: 12px;
+}
+
+.acting-user-picker {
+  gap: 8px;
+  color: var(--text-soft);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.acting-user-picker select {
+  max-width: 170px;
+  height: 36px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-card);
+  color: var(--text);
+  font-size: 12px;
 }
 
 .brand-pill {

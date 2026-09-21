@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react'
 import './App.css'
-import { tabs, catalogCards, initialApprovals } from './data'
-import type { ApprovalItem, CatalogFilter, CommentMode, TabKey } from './types'
+import { tabs } from './data'
+import type { CommentMode, RoutingQueueItem, TabKey } from './types'
 import CatalogView from './views/CatalogView'
 import MyRequestsView from './views/MyRequestsView'
 import TeamQueueView from './views/TeamQueueView'
@@ -12,20 +11,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import './index.css'
 
-type View = 'submit' | 'queue'
 type QueueStatus = 'Pending' | 'Approved' | 'Rejected'
-
-type QueueItem = {
-  id: string
-  requestId: string
-  title: string
-  requester: string
-  submitted: string
-  category: string
-  status: QueueStatus
-  decisionId: string
-  stepId: string
-}
 
 type QueueResponse = {
   decisionId: string
@@ -50,32 +36,16 @@ const users: User[] = [
   { id: 'manager-2', initials: 'M2' },
 ]
 
-const initialQueue: QueueItem[] = [
-  { id: 'step-1', requestId: 'REQ-0001', title: 'New laptop request', requester: 'Jordan Lee', submitted: 'Today, 09:42', category: 'IT / Equipment', status: 'Pending', decisionId: 'decision-1', stepId: 'step-1' },
-  { id: 'step-2', requestId: 'REQ-0002', title: 'Annual leave request', requester: 'Maya Patel', submitted: 'Yesterday, 16:18', category: 'HR / Leave', status: 'Pending', decisionId: 'demo-decision-2', stepId: 'demo-step-2' },
-]
-
 function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('catalog')
-  const [activeFilter, setActiveFilter] = useState<CatalogFilter>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [toastMessage, setToastMessage] = useState('')
   const [commentMode, setCommentMode] = useState<CommentMode>('reply')
-  const [approvalCards, setApprovalCards] = useState<ApprovalItem[]>(initialApprovals)
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [rejectTicket, setRejectTicket] = useState('REQ-2046')
   const [rejectReason, setRejectReason] = useState('')
-
-  const visibleCatalog = useMemo(() => {
-    const lowerSearch = searchTerm.toLowerCase()
-    return catalogCards.filter((card) => {
-      const matchesFilter = activeFilter === 'all' || card.category === activeFilter
-      const matchesSearch =
-        lowerSearch.length === 0 ||
-        `${card.name} ${card.description} ${card.badge}`.toLowerCase().includes(lowerSearch)
-      return matchesFilter && matchesSearch
-    })
-  }, [activeFilter, searchTerm])
+  const [rejectQueueItem, setRejectQueueItem] = useState<RoutingQueueItem | null>(null)
+  const [intakeFormOpen, setIntakeFormOpen] = useState(false)
 
   const showToast = (message: string) => {
     setToastMessage(message)
@@ -83,21 +53,20 @@ function App() {
     ;(window as typeof window & { __opsToast?: number }).__opsToast = window.setTimeout(() => {
       setToastMessage('')
     }, 2800)
-  const [view, setView] = useState<View>('submit')
-  const [queue, setQueue] = useState(initialQueue)
+  }
+  
+  const [queue, setQueue] = useState<RoutingQueueItem[]>([])
+  const [queueLoading, setQueueLoading] = useState(false)
   const [selectedType, setSelectedType] = useState('new-laptop')
-  const [description, setDescription] = useState('')
-  const [department, setDepartment] = useState('')
+  const [description, setDescription] = useState('Need a new workstation for data pipeline work.')
+  const [department, setDepartment] = useState('Engineering')
   const [submitting, setSubmitting] = useState(false)
   const [notice, setNotice] = useState('')
-  const [rejecting, setRejecting] = useState<string | null>(null)
-  const [rejectionReason, setRejectionReason] = useState('')
   const [actingOn, setActingOn] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState(users[0])
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   useEffect(() => {
-    if (view !== 'queue') return
+    if (activeTab !== 'teamqueue' && activeTab !== 'approvals') return
 
     fetch(`${apiBaseUrl}/routing-decisions/queue?approverId=${currentUser.id}`)
       .then(async (response) => {
@@ -115,11 +84,15 @@ function App() {
         decisionId: item.decisionId,
         stepId: item.stepId,
       }))))
-      .catch(() => setNotice('Could not load the routing queue. Start the NestJS server and try again.'))
-  }, [currentUser.id, view])
+      .catch(() => {
+        setQueue([])
+        setNotice('Could not load routing data. Start the NestJS server and try again.')
+      })
+      .finally(() => setQueueLoading(false))
+  }, [activeTab, currentUser.id])
 
-  const submitRequest = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const submitRequest = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault()
     setSubmitting(true)
     setNotice('')
 
@@ -146,8 +119,8 @@ function App() {
 
       setSubmitting(false)
       setNotice(`Request ${payload.request.id} created with status ${payload.request.status}.`)
-      setDescription('')
-      setDepartment('')
+      setActiveTab('myrequests')
+      setIntakeFormOpen(false)
     } catch (error) {
       setSubmitting(false)
       setNotice(error instanceof Error && error.message !== 'Failed to fetch'
@@ -156,7 +129,7 @@ function App() {
     }
   }
 
-  const decide = async (item: QueueItem, decision: 'approve' | 'reject', reason?: string) => {
+  const decide = async (item: RoutingQueueItem, decision: 'approve' | 'reject', reason?: string) => {
     setActingOn(item.id)
     setNotice('')
     try {
@@ -170,9 +143,46 @@ function App() {
       setActingOn(null)
       return
     }
+    setQueue((current) => current.map((candidate) => candidate.id === item.id
+      ? { ...candidate, status: decision === 'approve' ? 'Approved' : 'Rejected' }
+      : candidate))
+    setActingOn(null)
     setRejectModalOpen(false)
     setRejectReason('')
-    showToast('Ticket rejected with formal rationale dispatched.')
+    showToast(`${item.requestId} marked ${decision === 'approve' ? 'approved' : 'rejected'}.`)
+  }
+
+  const handleBulkApproveAll = async () => {
+    for (const item of queue) {
+      await decide(item, 'approve')
+    }
+  }
+  const handleTabChange = (tab: TabKey) => {
+    if (tab === 'teamqueue' || tab === 'approvals') {
+      setQueueLoading(true)
+      setNotice('')
+    }
+    setActiveTab(tab)
+  }
+  const handleRejectOpen = (ticket: string) => {
+    setRejectTicket(ticket)
+    setRejectReason('')
+    setRejectQueueItem(queue.find((item) => item.requestId === ticket) ?? null)
+    setRejectModalOpen(true)
+  }
+  const handleRejectConfirm = () => {
+    if (!rejectReason.trim()) {
+      showToast('Please provide a rejection reason.')
+      return
+    }
+    if (rejectQueueItem) {
+      void decide(rejectQueueItem, 'reject', rejectReason)
+      setRejectQueueItem(null)
+      return
+    }
+    setRejectModalOpen(false)
+    setRejectReason('')
+    showToast(`Ticket ${rejectTicket} rejected with formal rationale dispatched.`)
   }
 
   return (
@@ -210,7 +220,7 @@ function App() {
                 key={tab.key}
                 type="button"
                 className={`tab-button ${activeTab === tab.key ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => handleTabChange(tab.key)}
               >
                 <span className="material-symbols-outlined">{tab.icon}</span>
                 <span>{tab.label}</span>
@@ -229,28 +239,55 @@ function App() {
           <button type="button" className="icon-button neutral hidden-mobile" aria-label="Help">
             <span className="material-symbols-outlined">help</span>
           </button>
-          <div className="profile-pill">
-            <div className="profile-copy">
-              <span className="profile-name">Alex Morgan</span>
-              <span className="profile-role">SecOps Lead</span>
-            </div>
-            <div className="avatar">AM</div>
-          </div>
+          <label className="acting-user-picker">
+            <span>Acting as</span>
+            <select value={currentUser.id} onChange={(event) => {
+              if (activeTab === 'teamqueue' || activeTab === 'approvals') setQueueLoading(true)
+              setCurrentUser(users.find((user) => user.id === event.target.value) ?? users[0])
+            }}>
+              {users.map((user) => <option key={user.id} value={user.id}>{user.initials} · {user.id}</option>)}
+            </select>
+          </label>
         </div>
       </header>
 
       <main className="workspace-shell">
         <div className="workspace-inner">
           <section className={`tab-pane ${activeTab === 'catalog' ? 'visible' : 'hidden'}`}>
-            <CatalogView
-              activeFilter={activeFilter}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              handleSubmitRequest={handleSubmitRequest}
-              handleFilterChange={handleFilterChange}
-              showToast={showToast}
-              visibleCatalog={visibleCatalog}
-            />
+            <CatalogView onInitiateRequest={() => setIntakeFormOpen(true)} />
+            {intakeFormOpen && <div className="table-panel" style={{ marginTop: 24 }}>
+              <div className="table-header">
+                <div>
+                  <div className="eyebrow-label">LIVE INTAKE API</div>
+                  <h3>Submit a routed request</h3>
+                </div>
+              </div>
+              <form className="field-grid" onSubmit={submitRequest}>
+                <label className="field-label compact">
+                  <span>Request type</span>
+                  <select value={selectedType} onChange={(event) => setSelectedType(event.target.value)}>
+                    <option value="new-laptop">New laptop / equipment</option>
+                    <option value="pto">PTO / leave exception</option>
+                  </select>
+                </label>
+                <label className="field-label compact">
+                  <span>Department</span>
+                  <input required value={department} onChange={(event) => setDepartment(event.target.value)} />
+                </label>
+                <label className="field-label" style={{ gridColumn: '1 / -1' }}>
+                  <span>Description</span>
+                  <textarea required rows={2} value={description} onChange={(event) => setDescription(event.target.value)} />
+                </label>
+                <div className="action-row" style={{ gridColumn: '1 / -1' }}>
+                  <button type="submit" className="primary-action" disabled={submitting}>
+                    <span className="material-symbols-outlined">send</span>
+                    <span>{submitting ? 'Submitting...' : 'Submit to Intake'}</span>
+                  </button>
+                </div>
+              </form>
+              {notice && <div className="empty-state" role="status">{notice}</div>}
+            </div>
+            }
           </section>
 
           <section className={`tab-pane ${activeTab === 'myrequests' ? 'visible' : 'hidden'}`}>
@@ -258,15 +295,36 @@ function App() {
           </section>
 
           <section className={`tab-pane ${activeTab === 'teamqueue' ? 'visible' : 'hidden'}`}>
-            <TeamQueueView commentMode={commentMode} setCommentMode={setCommentMode} showToast={showToast} />
+            <TeamQueueView commentMode={commentMode} setCommentMode={setCommentMode} showToast={showToast} queue={queue} />
+            <div className="table-panel" style={{ marginTop: 24 }}>
+              <div className="table-header">
+                <h3>Live routing queue</h3>
+                <span>{queue.filter((item) => item.status === 'Pending').length} awaiting decision</span>
+              </div>
+              {notice && <div className="empty-state" role="status">{notice}</div>}
+              {queue.map((item) => (
+                <div className="field-row" key={item.id}>
+                  <div className="field-copy">
+                    <strong>{item.title}</strong>
+                    <span>{item.requestId} · {item.category} · {item.requester} · {item.submitted}</span>
+                  </div>
+                  <span className={`state-badge ${item.status.toLowerCase()}`}>{item.status}</span>
+                  {item.status === 'Pending' && <>
+                    <button type="button" className="secondary-action small" disabled={actingOn === item.id} onClick={() => handleRejectOpen(item.requestId)}>Reject</button>
+                    <button type="button" className="primary-action small" disabled={actingOn === item.id} onClick={() => void decide(item, 'approve')}>Approve</button>
+                  </>}
+                </div>
+              ))}
+            </div>
           </section>
 
           <section className={`tab-pane ${activeTab === 'approvals' ? 'visible' : 'hidden'}`}>
             <ApprovalsView
-              approvalCards={approvalCards}
+              approvalCards={queue}
               handleBulkApproveAll={handleBulkApproveAll}
               handleRejectOpen={handleRejectOpen}
-              showToast={showToast}
+              handleApprove={(item) => { void decide(item, 'approve') }}
+              loading={queueLoading}
             />
           </section>
 
@@ -288,7 +346,7 @@ function App() {
       )}
 
       {rejectModalOpen && (
-        <div className="modal-backdrop" onClick={() => setRejectModalOpen(false)}>
+        <div className="modal-backdrop" onClick={() => { setRejectModalOpen(false); setRejectQueueItem(null) }}>
           <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-heading">
