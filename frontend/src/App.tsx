@@ -8,6 +8,52 @@ import TeamQueueView from './views/TeamQueueView'
 import ApprovalsView from './views/ApprovalsView'
 import ReportsView from './views/ReportsView'
 import ConfigView from './views/ConfigView'
+import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
+import './index.css'
+
+type View = 'submit' | 'queue'
+type QueueStatus = 'Pending' | 'Approved' | 'Rejected'
+
+type QueueItem = {
+  id: string
+  requestId: string
+  title: string
+  requester: string
+  submitted: string
+  category: string
+  status: QueueStatus
+  decisionId: string
+  stepId: string
+}
+
+type QueueResponse = {
+  decisionId: string
+  stepId: string
+  requestId: string
+  requesterId: string
+  requestTypeId: string
+  status: QueueStatus
+  submittedAt: string
+}
+
+type User = {
+  id: string
+  initials: string
+}
+
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
+const users: User[] = [
+  { id: 'employee-1', initials: 'E1' },
+  { id: 'employee-2', initials: 'E2' },
+  { id: 'manager-1', initials: 'M1' },
+  { id: 'manager-2', initials: 'M2' },
+]
+
+const initialQueue: QueueItem[] = [
+  { id: 'step-1', requestId: 'REQ-0001', title: 'New laptop request', requester: 'Jordan Lee', submitted: 'Today, 09:42', category: 'IT / Equipment', status: 'Pending', decisionId: 'decision-1', stepId: 'step-1' },
+  { id: 'step-2', requestId: 'REQ-0002', title: 'Annual leave request', requester: 'Maya Patel', submitted: 'Yesterday, 16:18', category: 'HR / Leave', status: 'Pending', decisionId: 'demo-decision-2', stepId: 'demo-step-2' },
+]
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('catalog')
@@ -37,32 +83,91 @@ function App() {
     ;(window as typeof window & { __opsToast?: number }).__opsToast = window.setTimeout(() => {
       setToastMessage('')
     }, 2800)
+  const [view, setView] = useState<View>('submit')
+  const [queue, setQueue] = useState(initialQueue)
+  const [selectedType, setSelectedType] = useState('new-laptop')
+  const [description, setDescription] = useState('')
+  const [department, setDepartment] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [notice, setNotice] = useState('')
+  const [rejecting, setRejecting] = useState<string | null>(null)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [actingOn, setActingOn] = useState<string | null>(null)
+  const [currentUser, setCurrentUser] = useState(users[0])
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  useEffect(() => {
+    if (view !== 'queue') return
+
+    fetch(`${apiBaseUrl}/routing-decisions/queue?approverId=${currentUser.id}`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Queue request failed')
+        return response.json() as Promise<QueueResponse[]>
+      })
+      .then((items) => setQueue(items.map((item) => ({
+        id: item.stepId,
+        requestId: item.requestId,
+        title: item.requestTypeId === 'new-laptop' ? 'New laptop request' : item.requestTypeId,
+        requester: item.requesterId,
+        submitted: new Date(item.submittedAt).toLocaleString(),
+        category: item.requestTypeId === 'new-laptop' ? 'IT / Equipment' : 'Service request',
+        status: item.status,
+        decisionId: item.decisionId,
+        stepId: item.stepId,
+      }))))
+      .catch(() => setNotice('Could not load the routing queue. Start the NestJS server and try again.'))
+  }, [currentUser.id, view])
+
+  const submitRequest = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setSubmitting(true)
+    setNotice('')
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/requests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-actor-id': currentUser.id,
+        },
+        body: JSON.stringify({
+          requesterId: currentUser.id,
+          requestTypeId: selectedType,
+          description,
+          formData: { department },
+          idempotencyKey: crypto.randomUUID(),
+        }),
+      })
+
+      const payload = await response.json()
+      if (!response.ok) {
+        throw new Error(payload.message ?? 'The request could not be submitted.')
+      }
+
+      setSubmitting(false)
+      setNotice(`Request ${payload.request.id} created with status ${payload.request.status}.`)
+      setDescription('')
+      setDepartment('')
+    } catch (error) {
+      setSubmitting(false)
+      setNotice(error instanceof Error && error.message !== 'Failed to fetch'
+        ? error.message
+        : 'Could not reach the Intake API. Start the NestJS server and try again.')
+    }
   }
 
-  const handleSubmitRequest = () => {
-    showToast('Request submitted! Tracking ID: #OPS-' + Math.floor(1000 + Math.random() * 9000))
-    setActiveTab('myrequests')
-  }
-
-  const handleFilterChange = (filter: CatalogFilter) => {
-    setActiveFilter(filter)
-    showToast(`Filtered catalog by: ${filter.toUpperCase()}`)
-  }
-
-  const handleBulkApproveAll = () => {
-    setApprovalCards([])
-    showToast('All 3 pending approvals cleared!')
-  }
-
-  const handleRejectOpen = (ticket: string) => {
-    setRejectTicket(ticket)
-    setRejectReason('')
-    setRejectModalOpen(true)
-  }
-
-  const handleRejectConfirm = () => {
-    if (!rejectReason.trim()) {
-      showToast('Please provide a rejection reason.')
+  const decide = async (item: QueueItem, decision: 'approve' | 'reject', reason?: string) => {
+    setActingOn(item.id)
+    setNotice('')
+    try {
+        const response = await fetch(`${apiBaseUrl}/routing-decisions/${item.decisionId}/steps/${item.stepId}/decision`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approverId: currentUser.id, decision, ...(reason ? { reason } : {}) }),
+        })
+        if (!response.ok) throw new Error('The backend rejected this decision.')
+    } catch {
+      setNotice('Could not reach the backend. Start the NestJS server and try again.')
+      setActingOn(null)
       return
     }
     setRejectModalOpen(false)

@@ -143,6 +143,52 @@ button {
     font: 500 10px var(--mono);
 }
 
+.user-switcher {
+    position: relative;
+}
+
+.avatar {
+    cursor: pointer;
+}
+
+.user-menu {
+    position: absolute;
+    z-index: 2;
+    top: 39px;
+    right: 0;
+    width: 148px;
+    padding: 5px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .12);
+}
+
+.user-menu button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border: 0;
+    border-radius: 3px;
+    color: var(--ink);
+    background: transparent;
+    text-align: left;
+    font: 500 11px var(--mono);
+}
+
+.user-menu button:hover,
+.user-menu button.selected {
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.user-menu button span {
+    color: var(--muted);
+    font-size: 9px;
+}
+
 .workspace {
     width: min(1160px, calc(100% - 48px));
     margin: 0 auto;

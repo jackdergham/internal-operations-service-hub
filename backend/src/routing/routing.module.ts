@@ -5,5 +5,6 @@ import { RoutingService } from './routing.service.js';
 @Module({
   controllers: [RoutingController],
   providers: [RoutingService],
+  exports: [RoutingService],
 })
 export class RoutingModule {}
