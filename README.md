@@ -1,10 +1,6 @@
 # Internal Operations Service Hub
 
-A small internal request-management service for HR and IT operations. The
-current full-stack slice lets a requester submit a service request through a
-React UI, validates it in NestJS, persists it in SQLite through Prisma, and
-hands it to the live Routing queue for approval. Approval updates the same
-persisted request and appends a status event.
+A small internal request-management service for HR and IT operations. The current full-stack slice lets a requester submit a service request through a React UI, validates it in NestJS, persists it in SQLite through Prisma, and hands it to the live Routing queue for approval. Approval updates the same persisted request and appends a status event.
 
 ## Project structure
 
@@ -39,8 +35,17 @@ npm install
 DATABASE_URL="file:./dev.db"
 ```
 
-The SQLite database is created at `backend/prisma/dev.db` and is ignored by
-Git.
+For optional Gemini assistance, add the following backend variables. Never commit the API key:
+
+```text
+AI_PROVIDER=gemini
+GEMINI_API_KEY=<your-rotated-key>
+GEMINI_MODEL=<supported-gemini-model>
+```
+
+When `AI_PROVIDER` is not `gemini`, or the key is unavailable, the backend uses the deterministic local assistance provider instead.
+
+The SQLite database is created at `backend/prisma/dev.db` and is ignored by Git.
 
 ## Run the applications
 
@@ -64,13 +69,9 @@ npm run dev
 
 The UI runs at `http://localhost:5173`.
 
-Open the frontend and use the **Submit request** section. The form sends a
-real request to `POST /requests` and displays the persisted request ID and
-`Pending Approval` status. Switch to **Routing queue** to see the newly
-submitted request and approve or reject it through the NestJS routing endpoint.
-Click the avatar in the top bar to switch between `employee-1`, `employee-2`,
-`manager-1`, and `manager-2`. Requests from `employee-1` route only to
-`manager-1`, while requests from `employee-2` route only to `manager-2`.
+Open the frontend and use the **Submit request** section. The form sends a real request to `POST /requests` and displays the persisted request ID and `Pending Approval` status. Switch to **Routing queue** to see the newly submitted request and approve or reject it through the NestJS routing endpoint. Click the avatar in the top bar to switch between `employee-1`, `employee-2`, `manager-1`, and `manager-2`. Requests from `employee-1` route only to `manager-1`, while requests from `employee-2` route only to `manager-2`.
+
+Inside the same request creator, enter a description and select **Fill form with AI** to receive suggested request type and form values. Review the suggestions and complete any missing required fields before submitting. AI assistance does not submit requests automatically.
 
 ## Service Request API
 
@@ -95,8 +96,7 @@ curl -X POST http://localhost:3000/requests \
   }'
 ```
 
-The response contains a generated request ID, `status: "Pending Approval"`,
-and both the initial `Submitted` event and the Routing handoff event.
+The response contains a generated request ID, `status: "Pending Approval"`, and both the initial `Submitted` event and the Routing handoff event.
 
 List the live approval queue:
 
@@ -121,8 +121,7 @@ curl -X POST http://localhost:3000/routing-decisions/{decisionId}/steps/{stepId}
   -d '{"approverId":"manager-1","decision":"approve"}'
 ```
 
-The persisted request moves from `Pending Approval` to `Approved` and receives
-an `Approved` status event.
+The persisted request moves from `Pending Approval` to `Approved` and receives an `Approved` status event.
 
 An actor mismatch is intentionally denied:
 
@@ -138,9 +137,7 @@ curl -i -X POST http://localhost:3000/requests \
   }'
 ```
 
-This returns `403 Forbidden`. A description shorter than 10 characters returns
-`400 Bad Request`. Reusing the same `idempotencyKey` returns the original
-request with `replayed: true` instead of creating a duplicate.
+This returns `403 Forbidden`. A description shorter than 10 characters returns `400 Bad Request`. Reusing the same `idempotencyKey` returns the original request with `replayed: true` instead of creating a duplicate.
 
 ## Existing routing API
 
@@ -152,9 +149,7 @@ curl -X POST http://localhost:3000/routing-decisions/decision-1/steps/step-1/dec
   -d '{"approverId":"manager-1","decision":"approve"}'
 ```
 
-This changes the seeded approval step to `Approved` and its routing decision to
-`ReadyForQueue`. Pending persisted requests are rebuilt into the routing
-projection when the backend restarts.
+This changes the seeded approval step to `Approved` and its routing decision to `ReadyForQueue`. Pending persisted requests are rebuilt into the routing projection when the backend restarts.
 
 ## Automated verification
 
@@ -166,7 +161,10 @@ npm test
 npm run test:e2e
 npm run build
 npm run lint
+npm run eval:ai
 ```
+
+`npm run eval:ai` runs the nine deterministic request-assistance cases without requiring a Gemini API key or network access.
 
 Frontend checks:
 
@@ -176,14 +174,14 @@ npm run build
 npm run lint
 ```
 
-The backend tests cover the request business rules, SQLite persistence, HTTP
-contract, authorization denial, invalid input, idempotent retry handling, and
-the employee-to-manager routing hierarchy.
+The backend tests cover the request business rules, SQLite persistence, HTTP contract, authorization denial, invalid input, idempotent retry handling, and the employee-to-manager routing hierarchy.
 
 ## Documentation
 
 - [Product specification](docs/product-spec.md)
 - [Architecture](docs/architecture.md)
 - [Data model](docs/data-model.md)
-- [Week 2 routing evidence](docs/week2-agentic-workflow.md)
-- [Week 3 full-stack delivery](docs/week3-full-stack-delivery.md)
+- [Week 2 routing evidence](docs/delivery/week2-agentic-workflow.md)
+- [Week 3 full-stack delivery](docs/delivery/week3-full-stack-delivery.md)
+- [Week 4 production AI](docs/delivery/week4-production-ai.md)
+- [ADR-001](docs/decisions/ADR-001.md)

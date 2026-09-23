@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { IntakeController } from './intake.controller.js';
 import { IntakeService } from './intake.service.js';
 import { RoutingModule } from '../routing/routing.module.js';
-import { LocalRequestAssistProvider } from './local-request-assist.provider.js';
-import { RequestAssistService } from './request-assist.service.js';
-import { GeminiRequestAssistProvider } from './gemini-request-assist.provider.js';
-import { REQUEST_ASSIST_PROVIDER } from './request-assist.service.js';
+import { LocalRequestAssistProvider } from './assistance/local-request-assist.provider.js';
+import { RequestAssistService } from './assistance/request-assist.service.js';
+import { GeminiRequestAssistProvider } from './assistance/gemini-request-assist.provider.js';
+import { REQUEST_ASSIST_PROVIDER } from './assistance/request-assist.service.js';
 
 @Module({
   imports: [RoutingModule],

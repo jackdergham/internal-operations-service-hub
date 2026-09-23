@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
 import { IntakeService } from './intake.service.js';
 import type { CreateRequestInput } from './intake.types.js';
-import { RequestAssistService } from './request-assist.service.js';
-import type { AssistRequestInput } from './request-assist.types.js';
+import { RequestAssistService } from './assistance/request-assist.service.js';
+import type { AssistRequestInput } from './assistance/request-assist.types.js';
 
 @Controller()
 export class IntakeController {
