@@ -13,6 +13,25 @@ import './index.css'
 
 type QueueStatus = 'Pending' | 'Approved' | 'Rejected'
 
+type AssistSuggestion = {
+  requestTypeId: string | null
+  formData: Record<string, unknown>
+  missingFields: string[]
+  warnings: string[]
+  confidence: 'high' | 'medium' | 'low'
+  source: 'local' | 'gemini'
+}
+
+type RequestType = {
+  id: string
+  name: string
+  department: string
+  schema: {
+    fields?: Array<{ key: string; label: string; type: string }>
+    required?: string[]
+  }
+}
+
 type QueueResponse = {
   decisionId: string
   stepId: string
@@ -46,6 +65,10 @@ function App() {
   const [rejectReason, setRejectReason] = useState('')
   const [rejectQueueItem, setRejectQueueItem] = useState<RoutingQueueItem | null>(null)
   const [intakeFormOpen, setIntakeFormOpen] = useState(false)
+  const [aiDescription, setAiDescription] = useState('')
+  const [aiSuggestion, setAiSuggestion] = useState<AssistSuggestion | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [requestTypes, setRequestTypes] = useState<RequestType[]>([])
 
   const showToast = (message: string) => {
     setToastMessage(message)
@@ -59,11 +82,21 @@ function App() {
   const [queueLoading, setQueueLoading] = useState(false)
   const [selectedType, setSelectedType] = useState('new-laptop')
   const [description, setDescription] = useState('Need a new workstation for data pipeline work.')
-  const [department, setDepartment] = useState('Engineering')
+  const [formData, setFormData] = useState<Record<string, string>>({ department: 'Engineering' })
   const [submitting, setSubmitting] = useState(false)
   const [notice, setNotice] = useState('')
   const [actingOn, setActingOn] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState(users[0])
+
+  useEffect(() => {
+    fetch(`${apiBaseUrl}/request-types`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Request types could not be loaded')
+        return response.json() as Promise<RequestType[]>
+      })
+      .then(setRequestTypes)
+      .catch(() => setNotice('Could not load request type configuration.'))
+  }, [])
 
   useEffect(() => {
     if (activeTab !== 'teamqueue' && activeTab !== 'approvals') return
@@ -107,7 +140,7 @@ function App() {
           requesterId: currentUser.id,
           requestTypeId: selectedType,
           description,
-          formData: { department },
+          formData,
           idempotencyKey: crypto.randomUUID(),
         }),
       })
@@ -128,6 +161,47 @@ function App() {
         : 'Could not reach the Intake API. Start the NestJS server and try again.')
     }
   }
+
+  const assistRequest = async () => {
+    setAiLoading(true)
+    setNotice('')
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/requests/assist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-actor-id': currentUser.id,
+        },
+        body: JSON.stringify({ requesterId: currentUser.id, description: aiDescription }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.message ?? 'The request could not be assisted.')
+
+      const suggestion = payload as AssistSuggestion
+      setAiSuggestion(suggestion)
+      if (suggestion.requestTypeId) setSelectedType(suggestion.requestTypeId)
+      setFormData((current) => ({
+        ...current,
+        ...Object.fromEntries(Object.entries(suggestion.formData).map(([key, value]) => [key, String(value)])),
+      }))
+      setDescription(aiDescription)
+      setNotice(suggestion.warnings.length > 0
+        ? suggestion.warnings.join(' ')
+        : 'Suggested values applied. Review the form before submitting.')
+    } catch (error) {
+      setNotice(error instanceof Error && error.message !== 'Failed to fetch'
+        ? error.message
+        : 'Could not reach the AI assistance service. You can complete the form manually.')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  const selectedRequestType = requestTypes.find((requestType) => requestType.id === selectedType)
+  const configuredFields = selectedRequestType?.schema.fields ?? [
+    { key: 'department', label: 'Department', type: 'text' },
+  ]
 
   const decide = async (item: RoutingQueueItem, decision: 'approve' | 'reject', reason?: string) => {
     setActingOn(item.id)
@@ -254,7 +328,12 @@ function App() {
       <main className="workspace-shell">
         <div className="workspace-inner">
           <section className={`tab-pane ${activeTab === 'catalog' ? 'visible' : 'hidden'}`}>
-            <CatalogView onInitiateRequest={() => setIntakeFormOpen(true)} />
+            <CatalogView onInitiateRequest={() => {
+              setIntakeFormOpen(true)
+              setAiSuggestion(null)
+              setAiDescription('')
+              setNotice('')
+            }} />
             {intakeFormOpen && <div className="table-panel" style={{ marginTop: 24 }}>
               <div className="table-header">
                 <div>
@@ -262,22 +341,53 @@ function App() {
                   <h3>Submit a routed request</h3>
                 </div>
               </div>
+              <div className="field-grid" style={{ marginBottom: 18 }}>
+                <label className="field-label" style={{ gridColumn: '1 / -1' }}>
+                  <span>Describe what you need</span>
+                  <textarea
+                    rows={3}
+                    value={aiDescription}
+                    onChange={(event) => setAiDescription(event.target.value)}
+                    placeholder="Example: I need a laptop for the Engineering department."
+                  />
+                </label>
+                <div className="action-row" style={{ gridColumn: '1 / -1' }}>
+                  <button type="button" className="secondary-action" onClick={() => void assistRequest()} disabled={aiLoading || !aiDescription.trim()}>
+                    <span className="material-symbols-outlined">auto_awesome</span>
+                    <span>{aiLoading ? 'Preparing form...' : 'Fill form with AI'}</span>
+                  </button>
+                  {aiSuggestion && <span className="field-hint">Source: {aiSuggestion.source} · Confidence: {aiSuggestion.confidence}</span>}
+                </div>
+              </div>
               <form className="field-grid" onSubmit={submitRequest}>
                 <label className="field-label compact">
                   <span>Request type</span>
                   <select value={selectedType} onChange={(event) => setSelectedType(event.target.value)}>
-                    <option value="new-laptop">New laptop / equipment</option>
-                    <option value="pto">PTO / leave exception</option>
+                    {requestTypes.length > 0
+                      ? requestTypes.map((requestType) => <option key={requestType.id} value={requestType.id}>{requestType.name}</option>)
+                      : <option value="new-laptop">New laptop / equipment</option>}
                   </select>
                 </label>
-                <label className="field-label compact">
-                  <span>Department</span>
-                  <input required value={department} onChange={(event) => setDepartment(event.target.value)} />
-                </label>
+                {configuredFields.map((field) => (
+                  <label className="field-label compact" key={field.key}>
+                    <span>{field.label}</span>
+                    <input
+                      required={selectedRequestType?.schema.required?.includes(field.key) ?? field.key === 'department'}
+                      type={field.type}
+                      value={formData[field.key] ?? ''}
+                      onChange={(event) => setFormData((current) => ({ ...current, [field.key]: event.target.value }))}
+                    />
+                  </label>
+                ))}
                 <label className="field-label" style={{ gridColumn: '1 / -1' }}>
                   <span>Description</span>
                   <textarea required rows={2} value={description} onChange={(event) => setDescription(event.target.value)} />
                 </label>
+                {aiSuggestion && aiSuggestion.missingFields.length > 0 && (
+                  <div className="empty-state" role="status" style={{ gridColumn: '1 / -1' }}>
+                    Review missing fields: {aiSuggestion.missingFields.join(', ')}.
+                  </div>
+                )}
                 <div className="action-row" style={{ gridColumn: '1 / -1' }}>
                   <button type="submit" className="primary-action" disabled={submitting}>
                     <span className="material-symbols-outlined">send</span>

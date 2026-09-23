@@ -21,19 +21,35 @@ const requestTypes = [
     id: 'new-laptop',
     name: 'New laptop / equipment',
     department: 'IT',
-    schema: { required: ['department'] },
+    schema: {
+      required: ['department'],
+      fields: [{ key: 'department', label: 'Department', type: 'text' }],
+    },
   },
   {
     id: 'pto-request',
     name: 'PTO / annual leave',
     department: 'HR',
-    schema: { required: ['department', 'startDate', 'endDate'] },
+    schema: {
+      required: ['department', 'startDate', 'endDate'],
+      fields: [
+        { key: 'department', label: 'Department', type: 'text' },
+        { key: 'startDate', label: 'Start date', type: 'date' },
+        { key: 'endDate', label: 'End date', type: 'date' },
+      ],
+    },
   },
   {
     id: 'desk-relocation',
     name: 'Desk relocation',
     department: 'Operations',
-    schema: { required: ['department', 'newLocation'] },
+    schema: {
+      required: ['department', 'newLocation'],
+      fields: [
+        { key: 'department', label: 'Department', type: 'text' },
+        { key: 'newLocation', label: 'New location', type: 'text' },
+      ],
+    },
   },
 ];
 

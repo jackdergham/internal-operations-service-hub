@@ -5,7 +5,7 @@ import type {
   RequestAssistProvider,
 } from './request-assist.types.js';
 
-const geminiModel = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
+const geminiModel = process.env.GEMINI_MODEL ?? 'gemini-3.5-flash-lite';
 
 @Injectable()
 export class GeminiRequestAssistProvider implements RequestAssistProvider {

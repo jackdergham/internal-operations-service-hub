@@ -14,10 +14,6 @@ export default function CatalogView({ onInitiateRequest }: Props) {
           <span className="material-symbols-outlined">add</span>
           <span>Initiate Request</span>
         </button>
-        <button type="button" className="secondary-action">
-          <span className="material-symbols-outlined">auto_awesome</span>
-          <span>AI-Assisted Request</span>
-        </button>
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ type EvaluationCase = {
   description: string;
   requestTypeId: string | null;
   expectedFields: Record<string, unknown>;
+  expectedMissingFields?: string[];
 };
 
 const cases: EvaluationCase[] = [
@@ -25,6 +26,27 @@ const cases: EvaluationCase[] = [
     description: 'I need to request PTO from the HR department.',
     requestTypeId: 'pto-request',
     expectedFields: { department: 'HR' },
+    expectedMissingFields: ['startDate', 'endDate'],
+  },
+  {
+    name: 'PTO with ISO dates',
+    description: 'Please book PTO for the Engineering department from 2026-10-12 to 2026-10-16.',
+    requestTypeId: 'pto-request',
+    expectedFields: {
+      department: 'Engineering',
+      startDate: '2026-10-12',
+      endDate: '2026-10-16',
+    },
+  },
+  {
+    name: 'PTO with slash dates',
+    description: 'I need vacation for the People Operations team from 03/11/2026 to 07/11/2026.',
+    requestTypeId: 'pto-request',
+    expectedFields: {
+      department: 'People Operations',
+      startDate: '2026-11-03',
+      endDate: '2026-11-07',
+    },
   },
   {
     name: 'desk relocation with location',
@@ -59,5 +81,8 @@ describe('AI request assistance evaluation', () => {
 
     expect(result.requestTypeId).toBe(testCase.requestTypeId);
     expect(result.formData).toMatchObject(testCase.expectedFields);
+    if (testCase.expectedMissingFields) {
+      expect(result.missingFields).toEqual(testCase.expectedMissingFields);
+    }
   });
 });
