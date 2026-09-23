@@ -41,7 +41,7 @@ export class LocalRequestAssistProvider implements RequestAssistProvider {
 
     const selectedRule = matches[0];
     const formData: Record<string, unknown> = {};
-    const departmentMatch = description.match(/\b(?:in|from|for)\s+([A-Za-z]+)\s+(?:department|team)\b/i);
+    const departmentMatch = description.match(/\b(?:in|from|for)\s+(?:the\s+)?([A-Za-z]+)\s+(?:department|team)\b/i);
     const locationMatch = description.match(/\b(?:to|at)\s+the\s+([A-Za-z0-9 -]+?)(?:\.|,|$)/i);
 
     if (departmentMatch) formData.department = departmentMatch[1];
