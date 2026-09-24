@@ -156,6 +156,14 @@ button {
   letter-spacing: 0.08em;
 }
 
+.brand-logo {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
 .brand-name {
   font-size: 16px;
   font-weight: 600;
@@ -850,9 +858,12 @@ h3 {
   background: rgba(53, 37, 205, 0.18);
 }
 
-.step-item.current::before,
-.step-item:first-child::before {
+.step-item.current::before {
   background: var(--primary);
+}
+
+.step-item.complete::before {
+  background: var(--tertiary);
 }
 
 .step-item.light {
@@ -862,30 +873,67 @@ h3 {
 .step-bullet {
   position: relative;
   z-index: 1;
-  width: 18px;
-  height: 18px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--surface-soft);
-  border: 3px solid var(--primary);
+  border: 0;
+  color: var(--text-soft);
+  font-size: 15px;
+  font-weight: 700;
 }
 
-.step-item.current .step-bullet {
+.step-bullet .material-symbols-outlined {
+  color: inherit;
+  font-size: 15px;
+}
+
+.step-bullet.active .material-symbols-outlined {
+  display: inline-block;
+  animation: tracker-spin 1.4s linear infinite;
+}
+
+@keyframes tracker-spin {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-bullet.active .material-symbols-outlined {
+    animation: none;
+  }
+}
+
+.step-bullet.complete {
+  background: var(--tertiary);
+  color: white;
+}
+
+.step-bullet.active {
   background: var(--primary);
-  border-color: var(--primary);
+  color: white;
   box-shadow: 0 0 0 4px rgba(53, 37, 205, 0.15);
 }
 
-.step-item strong,
-.step-item span {
+.step-item > strong,
+.step-item > span {
   font-size: 12px;
 }
 
-.step-item strong {
+.step-item > strong {
   font-weight: 600;
 }
 
-.step-item span {
+.step-item > span {
   color: var(--text-soft);
+}
+
+.step-item.current > strong,
+.step-item.current > span {
+  color: var(--primary);
 }
 
 .table-header {
@@ -942,6 +990,85 @@ td {
 .ticket-id {
   color: var(--text-soft);
   font-size: 11px;
+}
+
+.request-table-scroll {
+  overflow-x: auto;
+}
+
+.request-table-scroll table {
+  min-width: 820px;
+}
+
+.request-id-cell {
+  color: var(--primary);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.request-muted-cell {
+  color: var(--text-soft);
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.request-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.request-stage .material-symbols-outlined {
+  font-size: 15px;
+}
+
+.request-stage.active {
+  background: var(--secondary-soft);
+  color: var(--secondary);
+}
+
+.request-stage.resolved {
+  background: var(--tertiary-soft);
+  color: var(--tertiary);
+}
+
+.request-sla {
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.request-sla.active,
+.request-sla.resolved {
+  color: var(--tertiary);
+  font-weight: 600;
+}
+
+.request-action-heading,
+.request-action-cell {
+  text-align: right;
+}
+
+.request-action {
+  display: inline-flex;
+  padding: 6px 9px;
+  border-radius: 6px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .state-badge,

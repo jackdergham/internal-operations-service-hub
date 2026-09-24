@@ -1,6 +1,13 @@
 import { myRequestRows } from '../data'
 
 export default function MyRequestsView() {
+  const requestDetails = [
+    { submitted: 'Today, 09:15', stage: 'In Progress', sla: '28 hrs remaining', action: 'View Trail', icon: 'schedule', tone: 'active' },
+    { submitted: 'Yesterday, 14:20', stage: 'Pending Approval', sla: '14 hrs remaining', action: 'View Trail', icon: 'pending', tone: 'pending' },
+    { submitted: 'Oct 18, 10:00', stage: 'Resolved', sla: 'Fulfilled in 6 hrs', action: 'Audit Closed', icon: 'check_circle', tone: 'resolved' },
+    { submitted: 'Oct 12, 16:45', stage: 'Resolved', sla: 'Completed', action: 'Receipt File', icon: 'check_circle', tone: 'resolved' },
+  ]
+
   return (
     <>
       <div className="tracker-panel">
@@ -14,14 +21,16 @@ export default function MyRequestsView() {
 
         <div className="step-grid">
           {[
-            { label: 'Submitted', meta: 'Oct 24, 09:15', active: false },
-            { label: 'Manager Approved', meta: 'Oct 24, 11:30', active: false },
-            { label: 'In Fulfillment', meta: 'Dave Miller (IT)', active: true },
-            { label: 'Dispatched', meta: 'Pending Prep', active: false },
-            { label: 'Delivered', meta: 'Awaiting closeout', active: false },
-          ].map((step, index) => (
-            <div key={step.label} className={`step-item ${step.active ? 'current' : ''} ${index > 2 ? 'light' : ''}`}>
-              <div className="step-bullet" />
+            { label: 'Submitted', meta: 'Oct 24, 09:15', icon: 'check', complete: true },
+            { label: 'Manager Approved', meta: 'Oct 24, 11:30', icon: 'check', complete: true },
+            { label: 'In Fulfillment', meta: 'Dave Miller (IT)', icon: 'sync', active: true },
+            { label: 'Dispatched', meta: 'Pending Prep', icon: '4', future: true },
+            { label: 'Delivered', meta: 'Awaiting closeout', icon: '5', future: true },
+          ].map((step) => (
+            <div key={step.label} className={`step-item ${step.complete ? 'complete' : ''} ${step.active ? 'current' : ''} ${step.future ? 'light' : ''}`}>
+              <div className={`step-bullet ${step.complete ? 'complete' : ''} ${step.active ? 'active' : ''}`}>
+                <span className="material-symbols-outlined">{step.icon}</span>
+              </div>
               <strong>{step.label}</strong>
               <span>{step.meta}</span>
             </div>
@@ -35,33 +44,46 @@ export default function MyRequestsView() {
           <span>4 Records Found</span>
         </div>
 
-        <table>
+        <div className="request-table-scroll">
+          <table>
           <thead>
             <tr>
-              <th>Request</th>
-              <th>Service</th>
-              <th>Owner</th>
-              <th>Status</th>
+              <th>Ticket ID</th>
+              <th>Title &amp; Classification</th>
+              <th>Submitted</th>
+              <th>Current Stage</th>
+              <th>SLA Target</th>
+              <th className="request-action-heading">Action</th>
             </tr>
           </thead>
           <tbody>
-            {myRequestRows.map((row) => (
+            {myRequestRows.map((row, index) => {
+              const details = requestDetails[index]
+
+              return (
               <tr key={row.id}>
+                <td className="request-id-cell">#{row.id}</td>
                 <td>
                   <div className="request-cell">
                     <strong>{row.title}</strong>
-                    <span>{row.id}</span>
+                    <span>{row.service}</span>
                   </div>
                 </td>
-                <td>{row.service}</td>
-                <td>{row.owner}</td>
+                <td className="request-muted-cell">{details.submitted}</td>
                 <td>
-                  <span className={`state-badge ${row.state.toLowerCase()}`}>{row.status}</span>
+                  <span className={`request-stage ${details.tone}`}>
+                    <span className="material-symbols-outlined">{details.icon}</span>
+                    {details.stage}
+                  </span>
                 </td>
+                <td className={`request-sla ${details.tone}`}>{details.sla}</td>
+                <td className="request-action-cell"><span className="request-action">{details.action}</span></td>
               </tr>
-            ))}
+              )
+            })}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </>
   )

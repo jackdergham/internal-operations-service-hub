@@ -1,4 +1,5 @@
 import './App.css'
+import logo from './assets/logo.png'
 import { tabs } from './data'
 import type { CommentMode, RoutingQueueItem, TabKey } from './types'
 import CatalogView from './views/CatalogView'
@@ -148,7 +149,7 @@ function App() {
               }
             }}
           >
-            <div className="brand-mark">OH</div>
+            <img className="brand-logo" src={logo} alt="OpsHub" />
             <span className="brand-name">OpsHub</span>
           </div>
 
