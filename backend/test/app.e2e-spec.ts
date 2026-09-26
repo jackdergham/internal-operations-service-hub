@@ -27,7 +27,8 @@ describe('AppController (e2e)', () => {
   it('approves a pending approval step', () => {
     return request(app.getHttpServer())
       .post('/routing-decisions/decision-1/steps/step-1/decision')
-      .send({ approverId: 'manager-1', decision: 'approve' })
+      .set('x-actor-id', 'manager-1')
+      .send({ decision: 'approve' })
       .expect(201)
       .expect(({ body }) => {
         expect(body.status).toBe('ReadyForQueue');
@@ -36,25 +37,37 @@ describe('AppController (e2e)', () => {
   });
 
   it('rejects a decision from the wrong approver', () => {
+    // employee-1 is a real, known actor (the seeded request's own requester)
+    // but is not decision-1/step-1's designated approver (manager-1 is).
     return request(app.getHttpServer())
       .post('/routing-decisions/decision-1/steps/step-1/decision')
-      .send({ approverId: 'another-actor', decision: 'approve' })
+      .set('x-actor-id', 'employee-1')
+      .send({ decision: 'approve' })
       .expect(403);
+  });
+
+  it('rejects a decision from an actor unknown to the directory', () => {
+    return request(app.getHttpServer())
+      .post('/routing-decisions/decision-1/steps/step-1/decision')
+      .set('x-actor-id', 'someone-not-in-the-directory')
+      .send({ decision: 'approve' })
+      .expect(401);
   });
 
   it('requires a reason for rejection', () => {
     return request(app.getHttpServer())
       .post('/routing-decisions/decision-1/steps/step-1/decision')
-      .send({ approverId: 'manager-1', decision: 'reject' })
+      .set('x-actor-id', 'manager-1')
+      .send({ decision: 'reject' })
       .expect(400);
   });
 
   it('creates and persists a service request through the HTTP contract', () => {
     return request(app.getHttpServer())
       .post('/requests')
-      .set('x-actor-id', 'employee-e2e')
+      .set('x-actor-id', 'employee-1')
       .send({
-        requesterId: 'employee-e2e',
+        requesterId: 'employee-1',
         requestTypeId: 'new-laptop',
         description: 'My laptop needs replacement for current work.',
         formData: { department: 'Engineering' },
@@ -71,9 +84,9 @@ describe('AppController (e2e)', () => {
   it('denies a request when the actor is not the requester', () => {
     return request(app.getHttpServer())
       .post('/requests')
-      .set('x-actor-id', 'different-employee')
+      .set('x-actor-id', 'employee-2')
       .send({
-        requesterId: 'employee-e2e',
+        requesterId: 'employee-1',
         requestTypeId: 'new-laptop',
         description: 'This identity should not submit for another employee.',
         formData: { department: 'Engineering' },
@@ -81,13 +94,26 @@ describe('AppController (e2e)', () => {
       .expect(403);
   });
 
+  it('denies a request from an actor unknown to the directory', () => {
+    return request(app.getHttpServer())
+      .post('/requests')
+      .set('x-actor-id', 'someone-not-in-the-directory')
+      .send({
+        requesterId: 'someone-not-in-the-directory',
+        requestTypeId: 'new-laptop',
+        description: 'This identity is not in the mock org chart at all.',
+        formData: { department: 'Engineering' },
+      })
+      .expect(401);
+  });
+
   it('hands a submitted request to the routing queue and persists approval', async () => {
     const requestIdempotencyKey = `linked-flow-${Date.now()}`;
     const submission = await request(app.getHttpServer())
       .post('/requests')
-      .set('x-actor-id', 'linked-flow-employee')
+      .set('x-actor-id', 'employee-1')
       .send({
-        requesterId: 'linked-flow-employee',
+        requesterId: 'employee-1',
         requestTypeId: 'new-laptop',
         description: 'This request should appear in routing for approval.',
         formData: { department: 'Engineering' },
@@ -101,8 +127,11 @@ describe('AppController (e2e)', () => {
       'Pending Approval',
     ]);
 
+    // employee-1's manager in the mock org chart is manager-1 (see
+    // directory.data.ts), so that's whose queue this should land in.
     const queue = await request(app.getHttpServer())
-      .get('/routing-decisions/queue?approverId=manager-1')
+      .get('/routing-decisions/queue')
+      .set('x-actor-id', 'manager-1')
       .expect(200);
     const queueItem = queue.body.find(
       (item: { requestId: string }) => item.requestId === submission.body.request.id,
@@ -115,7 +144,8 @@ describe('AppController (e2e)', () => {
 
     await request(app.getHttpServer())
       .post(`/routing-decisions/${queueItem.decisionId}/steps/${queueItem.stepId}/decision`)
-      .send({ approverId: 'manager-1', decision: 'approve' })
+      .set('x-actor-id', 'manager-1')
+      .send({ decision: 'approve' })
       .expect(201);
 
     const stored = await app.get(PrismaService).request.findUnique({

@@ -9,18 +9,28 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
+import { DirectoryService } from '../directory/directory.service.js';
 import { DecideApprovalInput, RoutingDecision, RoutingQueueItem } from './routing.types.js';
 
+// Fallback used only when DirectoryService isn't available (e.g. tests that
+// construct RoutingService directly) or when a requester isn't in the
+// directory yet. Matches architecture.md's failure scenario: missing
+// org-chart data falls back to a designated default rather than losing the
+// request.
 const managerByRequester: Record<string, string> = {
   'employee-1': 'manager-1',
   'employee-2': 'manager-2',
 };
+const DEFAULT_APPROVER = 'manager-1';
 
 @Injectable()
 export class RoutingService implements OnModuleInit {
   private readonly decisions = new Map<string, RoutingDecision>();
 
-  constructor(@Optional() private readonly prisma?: PrismaService) {
+  constructor(
+    @Optional() private readonly prisma?: PrismaService,
+    @Optional() private readonly directoryService?: DirectoryService,
+  ) {
     this.addSeedDecision();
   }
 
@@ -123,8 +133,22 @@ export class RoutingService implements OnModuleInit {
     this.decisions.set(decisionId, {
       id: decisionId, requestId: id, requesterId, requestTypeId, status: 'AwaitingApproval',
       destinationQueue: 'it-support', submittedAt: submittedAt.toISOString(),
-      approvalSteps: [{ id: `step-${id}`, stepNumber: 1, approverId: managerByRequester[requesterId] ?? 'manager-1', status: 'Pending' }],
+      approvalSteps: [{ id: `step-${id}`, stepNumber: 1, approverId: this.resolveApprover(requesterId), status: 'Pending' }],
     });
+  }
+
+  /**
+   * Resolves the first approver for a requester: prefer the directory (mock
+   * org chart) when available, fall back to the static map, then to a
+   * designated default. See architecture.md's Failure scenarios for why a
+   * missing org-chart entry must degrade gracefully rather than block intake.
+   */
+  private resolveApprover(requesterId: string): string {
+    return (
+      this.directoryService?.getManagerId(requesterId) ??
+      managerByRequester[requesterId] ??
+      DEFAULT_APPROVER
+    );
   }
 
   private validateInput(input: DecideApprovalInput): void {

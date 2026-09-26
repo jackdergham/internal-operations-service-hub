@@ -1,8 +1,11 @@
-import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { IntakeService } from './intake.service.js';
 import type { CreateRequestInput } from './intake.types.js';
 import { RequestAssistService } from './assistance/request-assist.service.js';
 import type { AssistRequestInput } from './assistance/request-assist.types.js';
+import { RequireKnownActorGuard } from '../directory/require-known-actor.guard.js';
+import { CurrentActor } from '../directory/current-actor.decorator.js';
+import type { Actor } from '../directory/directory.types.js';
 
 @Controller()
 export class IntakeController {
@@ -11,24 +14,22 @@ export class IntakeController {
     private readonly requestAssistService: RequestAssistService,
   ) {}
 
+  // Unguarded: the request-type catalog isn't tied to an identity, and the
+  // frontend fetches it before a user context exists.
   @Get('request-types')
   listRequestTypes() {
     return this.intakeService.listRequestTypes();
   }
 
   @Post('requests/assist')
-  assistRequest(
-    @Headers('x-actor-id') actorId: string | undefined,
-    @Body() input: AssistRequestInput,
-  ) {
-    return this.requestAssistService.assist(actorId, input);
+  @UseGuards(RequireKnownActorGuard)
+  assistRequest(@CurrentActor() actor: Actor, @Body() input: AssistRequestInput) {
+    return this.requestAssistService.assist(actor.employeeId, input);
   }
 
   @Post('requests')
-  createRequest(
-    @Headers('x-actor-id') actorId: string | undefined,
-    @Body() input: CreateRequestInput,
-  ) {
-    return this.intakeService.createRequest(actorId, input);
+  @UseGuards(RequireKnownActorGuard)
+  createRequest(@CurrentActor() actor: Actor, @Body() input: CreateRequestInput) {
+    return this.intakeService.createRequest(actor.employeeId, input);
   }
 }
