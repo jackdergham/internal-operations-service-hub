@@ -1,5 +1,6 @@
 import { ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
+import { DirectoryService } from '../directory/directory.service.js';
 import { IntakeService } from './intake.service.js';
 
 describe('IntakeService database integration', () => {
@@ -9,7 +10,7 @@ describe('IntakeService database integration', () => {
   beforeAll(async () => {
     prisma = new PrismaService();
     await prisma.$connect();
-    service = new IntakeService(prisma);
+    service = new IntakeService(prisma, new DirectoryService());
     await prisma.statusEvent.deleteMany();
     await prisma.attachment.deleteMany();
     await prisma.request.deleteMany();
@@ -25,7 +26,7 @@ describe('IntakeService database integration', () => {
       requesterId: 'employee-1',
       requestTypeId: 'new-laptop',
       description: 'My laptop cannot run the required development tools.',
-      formData: { department: 'Engineering' },
+      formData: {},
       attachments: [
         {
           filename: 'device-photo.png',
@@ -47,6 +48,7 @@ describe('IntakeService database integration', () => {
       requesterId: 'employee-1',
       status: 'Submitted',
       description: 'My laptop cannot run the required development tools.',
+      formData: { department: 'IT' },
     });
     expect(stored?.attachments).toHaveLength(1);
     expect(stored?.statusEvents).toHaveLength(1);
@@ -59,7 +61,7 @@ describe('IntakeService database integration', () => {
         requesterId: 'employee-1',
         requestTypeId: 'new-laptop',
         description: 'This should not be accepted as another employee.',
-        formData: { department: 'Engineering' },
+        formData: {},
       }),
     ).rejects.toThrow(ForbiddenException);
   });
@@ -70,7 +72,7 @@ describe('IntakeService database integration', () => {
         requesterId: 'employee-1',
         requestTypeId: 'new-laptop',
         description: 'Too short',
-        formData: { department: 'Engineering' },
+        formData: {},
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -80,7 +82,7 @@ describe('IntakeService database integration', () => {
       requesterId: 'employee-1',
       requestTypeId: 'new-laptop',
       description: 'A request that can be retried safely.',
-      formData: { department: 'Engineering' },
+      formData: {},
       idempotencyKey: 'test-retry-1',
     };
 

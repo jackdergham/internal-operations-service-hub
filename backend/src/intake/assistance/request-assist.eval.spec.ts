@@ -10,22 +10,22 @@ type EvaluationCase = {
 
 const cases: EvaluationCase[] = [
   {
-    name: 'new laptop with department',
+    name: 'new laptop',
     description: 'I need a new laptop for the Engineering department.',
     requestTypeId: 'new-laptop',
-    expectedFields: { department: 'Engineering' },
+    expectedFields: {},
   },
   {
     name: 'workstation with team wording',
     description: 'Please provide a workstation for the Finance team.',
     requestTypeId: 'new-laptop',
-    expectedFields: { department: 'Finance' },
+    expectedFields: {},
   },
   {
     name: 'PTO with missing dates',
     description: 'I need to request PTO from the HR department.',
     requestTypeId: 'pto-request',
-    expectedFields: { department: 'HR' },
+    expectedFields: {},
     expectedMissingFields: ['startDate', 'endDate'],
   },
   {
@@ -33,7 +33,6 @@ const cases: EvaluationCase[] = [
     description: 'Please book PTO for the Engineering department from 2026-10-12 to 2026-10-16.',
     requestTypeId: 'pto-request',
     expectedFields: {
-      department: 'Engineering',
       startDate: '2026-10-12',
       endDate: '2026-10-16',
     },
@@ -43,7 +42,6 @@ const cases: EvaluationCase[] = [
     description: 'I need vacation for the People Operations team from 03/11/2026 to 07/11/2026.',
     requestTypeId: 'pto-request',
     expectedFields: {
-      department: 'People Operations',
       startDate: '2026-11-03',
       endDate: '2026-11-07',
     },
@@ -52,13 +50,13 @@ const cases: EvaluationCase[] = [
     name: 'desk relocation with location',
     description: 'Please relocate my desk for the Operations department to the West Wing.',
     requestTypeId: 'desk-relocation',
-    expectedFields: { department: 'Operations', newLocation: 'West Wing' },
+    expectedFields: { newLocation: 'West Wing' },
   },
   {
     name: 'ambiguous equipment and desk request',
     description: 'I need a desk and a monitor for the IT department.',
     requestTypeId: 'new-laptop',
-    expectedFields: { department: 'IT' },
+    expectedFields: {},
   },
   {
     name: 'unknown request type',
@@ -70,7 +68,7 @@ const cases: EvaluationCase[] = [
     name: 'desk relocation without location',
     description: 'I need to relocate my desk from the Facilities department.',
     requestTypeId: 'desk-relocation',
-    expectedFields: { department: 'Facilities' },
+    expectedFields: {},
   },
 ];
 

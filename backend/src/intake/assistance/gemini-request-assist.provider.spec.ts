@@ -4,7 +4,6 @@ import { LocalRequestAssistProvider } from './local-request-assist.provider.js';
 const geminiSuggestion = {
   requestTypeId: 'pto-request',
   formData: {
-    department: 'Engineering',
     startDate: '2026-10-12',
     endDate: '2026-10-16',
   },
@@ -33,7 +32,7 @@ describe('GeminiRequestAssistProvider', () => {
     }), { status: 200 }));
 
     const provider = new GeminiRequestAssistProvider(new LocalRequestAssistProvider());
-    const result = await provider.suggest('I need PTO for the Engineering department.');
+    const result = await provider.suggest('I need PTO from 2026-10-12 to 2026-10-16.');
 
     expect(result).toEqual({ ...geminiSuggestion, source: 'gemini' });
     expect(fetch).toHaveBeenCalledOnce();
@@ -46,7 +45,7 @@ describe('GeminiRequestAssistProvider', () => {
     }), { status: 200 }));
 
     const provider = new GeminiRequestAssistProvider(new LocalRequestAssistProvider());
-    const result = await provider.suggest('I need a laptop for the Engineering department.');
+    const result = await provider.suggest('I need a laptop for development work.');
 
     expect(result.source).toBe('local');
     expect(result.warnings[0]).toContain('Gemini assistance was unavailable');
@@ -57,7 +56,7 @@ describe('GeminiRequestAssistProvider', () => {
     vi.mocked(fetch).mockResolvedValue(new Response('service unavailable', { status: 503 }));
 
     const provider = new GeminiRequestAssistProvider(new LocalRequestAssistProvider());
-    const result = await provider.suggest('I need a laptop for the Engineering department.');
+    const result = await provider.suggest('I need a laptop for development work.');
 
     expect(result.source).toBe('local');
     expect(result.warnings[0]).toContain('Gemini assistance was unavailable');
@@ -67,7 +66,7 @@ describe('GeminiRequestAssistProvider', () => {
     delete process.env.GEMINI_API_KEY;
 
     const provider = new GeminiRequestAssistProvider(new LocalRequestAssistProvider());
-    const result = await provider.suggest('I need a laptop for the Engineering department.');
+    const result = await provider.suggest('I need a laptop for development work.');
 
     expect(result.source).toBe('local');
     expect(result.warnings).not.toContain(expect.stringContaining('Gemini assistance was unavailable'));

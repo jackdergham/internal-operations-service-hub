@@ -1,11 +1,5 @@
 import type { Actor } from './directory.types.js';
 
-/**
- * Mock org chart. Stands in for the real external dependency described in
- * architecture.md ("Org chart / reporting-line data" / "Identity provider / SSO").
- * Ids employee-1, employee-2, manager-1 and manager-2 are kept stable because
- * routing.service.ts's seed data and the e2e tests already reference them.
- */
 export const orgChart: Actor[] = [
   {
     employeeId: 'employee-1',

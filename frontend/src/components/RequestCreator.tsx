@@ -16,14 +16,12 @@ export default function RequestCreator({ apiBaseUrl, currentUserId, requestTypes
   const [aiLoading, setAiLoading] = useState(false)
   const [selectedType, setSelectedType] = useState('new-laptop')
   const [description, setDescription] = useState('Need a new workstation for data pipeline work.')
-  const [formData, setFormData] = useState<Record<string, string>>({ department: 'Engineering' })
+  const [formData, setFormData] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [notice, setNotice] = useState('')
 
   const selectedRequestType = requestTypes.find((requestType) => requestType.id === selectedType)
-  const configuredFields = selectedRequestType?.schema.fields ?? [
-    { key: 'department', label: 'Department', type: 'text' },
-  ]
+  const configuredFields = selectedRequestType?.schema.fields ?? []
 
   const assistRequest = async () => {
     setAiLoading(true)
@@ -83,7 +81,7 @@ export default function RequestCreator({ apiBaseUrl, currentUserId, requestTypes
             rows={3}
             value={aiDescription}
             onChange={(event) => setAiDescription(event.target.value)}
-            placeholder="Example: I need a laptop for the Engineering department."
+            placeholder="Example: I need a laptop for development work."
           />
         </label>
         <div className="action-row" style={{ gridColumn: '1 / -1' }}>
@@ -107,7 +105,7 @@ export default function RequestCreator({ apiBaseUrl, currentUserId, requestTypes
           <label className="field-label compact" key={field.key}>
             <span>{field.label}</span>
             <input
-              required={selectedRequestType?.schema.required?.includes(field.key) ?? field.key === 'department'}
+              required={selectedRequestType?.schema.required?.includes(field.key) ?? false}
               type={field.type}
               value={formData[field.key] ?? ''}
               onChange={(event) => setFormData((current) => ({ ...current, [field.key]: event.target.value }))}

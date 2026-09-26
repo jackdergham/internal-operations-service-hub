@@ -22,7 +22,6 @@ export class DirectoryService {
     return actor;
   }
 
-  /** Resolves who this employee reports to, or null if there is no manager on file. */
   getManagerId(employeeId: string): string | null {
     return this.findById(employeeId)?.managerId ?? null;
   }

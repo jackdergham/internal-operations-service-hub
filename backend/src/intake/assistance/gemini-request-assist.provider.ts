@@ -61,9 +61,9 @@ export class GeminiRequestAssistProvider implements RequestAssistProvider {
       'Convert the employee request into a candidate internal operations request.',
       'Choose exactly one requestTypeId from: new-laptop, pto-request, desk-relocation, or null.',
       'Use only facts present in the description. Never invent missing values.',
-      'For new-laptop required fields are department.',
-      'For pto-request required fields are department, startDate, endDate.',
-      'For desk-relocation required fields are department, newLocation.',
+      'For new-laptop there are no additional form fields.',
+      'For pto-request required fields are startDate and endDate.',
+      'For desk-relocation the required field is newLocation.',
       'Return only the requested JSON object.',
       `Employee description: ${description}`,
     ].join('\n');

@@ -7,7 +7,7 @@ import type {
 
 const suggestion: AssistRequestSuggestion = {
   requestTypeId: 'new-laptop',
-  formData: { department: 'Engineering' },
+  formData: {},
   missingFields: [],
   warnings: [],
   confidence: 'high',

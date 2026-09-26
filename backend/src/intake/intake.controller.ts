@@ -13,9 +13,7 @@ export class IntakeController {
     private readonly intakeService: IntakeService,
     private readonly requestAssistService: RequestAssistService,
   ) {}
-
-  // Unguarded: the request-type catalog isn't tied to an identity, and the
-  // frontend fetches it before a user context exists.
+  
   @Get('request-types')
   listRequestTypes() {
     return this.intakeService.listRequestTypes();

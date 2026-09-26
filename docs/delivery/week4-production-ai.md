@@ -32,7 +32,7 @@ The provider returns:
 ```json
 {
 	"requestTypeId": "new-laptop",
-	"formData": { "department": "Engineering" },
+	"formData": {},
 	"missingFields": [],
 	"warnings": [],
 	"confidence": "high",
@@ -63,7 +63,6 @@ The local provider requires no API key and is deterministic. It recognizes:
 - Laptop, workstation, equipment, and monitor requests
 - PTO, leave, vacation, and annual leave requests
 - Desk relocation and workspace requests
-- Single- and multi-word departments
 - PTO dates in `YYYY-MM-DD` and `DD/MM/YYYY` formats
 - Relocation destinations when stated explicitly
 
@@ -90,7 +89,7 @@ npm run eval:ai
 
 The suite currently covers nine cases:
 
-- New laptop with a department
+- New laptop
 - Workstation with team wording
 - PTO with missing dates
 - PTO with ISO dates

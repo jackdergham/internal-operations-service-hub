@@ -10,6 +10,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
+import { DirectoryService } from '../directory/directory.service.js';
 import { RoutingService } from '../routing/routing.service.js';
 import {
   CreateRequestInput,
@@ -22,8 +23,8 @@ const requestTypes = [
     name: 'New laptop / equipment',
     department: 'IT',
     schema: {
-      required: ['department'],
-      fields: [{ key: 'department', label: 'Department', type: 'text' }],
+      required: [],
+      fields: [],
     },
   },
   {
@@ -31,9 +32,8 @@ const requestTypes = [
     name: 'PTO / annual leave',
     department: 'HR',
     schema: {
-      required: ['department', 'startDate', 'endDate'],
+      required: ['startDate', 'endDate'],
       fields: [
-        { key: 'department', label: 'Department', type: 'text' },
         { key: 'startDate', label: 'Start date', type: 'date' },
         { key: 'endDate', label: 'End date', type: 'date' },
       ],
@@ -44,9 +44,8 @@ const requestTypes = [
     name: 'Desk relocation',
     department: 'Operations',
     schema: {
-      required: ['department', 'newLocation'],
+      required: ['newLocation'],
       fields: [
-        { key: 'department', label: 'Department', type: 'text' },
         { key: 'newLocation', label: 'New location', type: 'text' },
       ],
     },
@@ -57,6 +56,7 @@ const requestTypes = [
 export class IntakeService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly directoryService: DirectoryService,
     @Optional() private readonly routingService?: RoutingService,
   ) {}
 
@@ -76,6 +76,8 @@ export class IntakeService implements OnModuleInit {
   ): Promise<CreateRequestResponse> {
     this.validateAuthorization(actorId, input.requesterId);
     this.validateInput(input);
+    const actor = this.directoryService.mustFind(input.requesterId);
+    const formData = { ...input.formData, department: actor.department };
 
     const requestType = await this.prisma.requestType.findUnique({
       where: { id: input.requestTypeId },
@@ -85,7 +87,7 @@ export class IntakeService implements OnModuleInit {
       throw new NotFoundException('Request type not found');
     }
 
-    this.validateFormData(requestType.schema, input.formData);
+    this.validateFormData(requestType.schema, formData);
 
     if (input.idempotencyKey) {
       const existing = await this.prisma.request.findUnique({
@@ -115,7 +117,7 @@ export class IntakeService implements OnModuleInit {
           requesterId: input.requesterId,
           requestTypeId: input.requestTypeId,
           description: input.description.trim(),
-          formData: input.formData as Prisma.InputJsonValue,
+          formData: formData as Prisma.InputJsonValue,
           idempotencyKey: input.idempotencyKey,
           attachments: {
             create: (input.attachments ?? []).map((attachment) => ({

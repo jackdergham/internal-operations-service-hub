@@ -37,8 +37,6 @@ describe('AppController (e2e)', () => {
   });
 
   it('rejects a decision from the wrong approver', () => {
-    // employee-1 is a real, known actor (the seeded request's own requester)
-    // but is not decision-1/step-1's designated approver (manager-1 is).
     return request(app.getHttpServer())
       .post('/routing-decisions/decision-1/steps/step-1/decision')
       .set('x-actor-id', 'employee-1')
@@ -70,13 +68,14 @@ describe('AppController (e2e)', () => {
         requesterId: 'employee-1',
         requestTypeId: 'new-laptop',
         description: 'My laptop needs replacement for current work.',
-        formData: { department: 'Engineering' },
+        formData: {},
         idempotencyKey: `e2e-request-${Date.now()}`,
       })
       .expect(201)
       .expect(({ body }) => {
         expect(body.replayed).toBe(false);
         expect(body.request.status).toBe('Pending Approval');
+        expect(body.request.formData.department).toBe('IT');
         expect(body.request.statusEvents[0].status).toBe('Submitted');
       });
   });
@@ -89,7 +88,7 @@ describe('AppController (e2e)', () => {
         requesterId: 'employee-1',
         requestTypeId: 'new-laptop',
         description: 'This identity should not submit for another employee.',
-        formData: { department: 'Engineering' },
+        formData: {},
       })
       .expect(403);
   });
@@ -102,7 +101,7 @@ describe('AppController (e2e)', () => {
         requesterId: 'someone-not-in-the-directory',
         requestTypeId: 'new-laptop',
         description: 'This identity is not in the mock org chart at all.',
-        formData: { department: 'Engineering' },
+        formData: {},
       })
       .expect(401);
   });
@@ -116,7 +115,7 @@ describe('AppController (e2e)', () => {
         requesterId: 'employee-1',
         requestTypeId: 'new-laptop',
         description: 'This request should appear in routing for approval.',
-        formData: { department: 'Engineering' },
+        formData: {},
         idempotencyKey: requestIdempotencyKey,
       })
       .expect(201);
@@ -127,8 +126,6 @@ describe('AppController (e2e)', () => {
       'Pending Approval',
     ]);
 
-    // employee-1's manager in the mock org chart is manager-1 (see
-    // directory.data.ts), so that's whose queue this should land in.
     const queue = await request(app.getHttpServer())
       .get('/routing-decisions/queue')
       .set('x-actor-id', 'manager-1')

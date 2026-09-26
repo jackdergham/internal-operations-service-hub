@@ -12,21 +12,21 @@ import RequestCreator from './components/RequestCreator'
 import { listRequestTypes } from './api/intakeApi'
 import type { RequestType } from './api/intakeApi'
 import { decideApproval, listApprovalQueue } from './api/routingApi'
+import { listActors } from './api/directoryApi'
+import type { Actor } from './api/directoryApi'
 import { useEffect, useState } from 'react'
 import './index.css'
 
-type User = {
-  id: string
-  initials: string
-}
-
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
-const users: User[] = [
-  { id: 'employee-1', initials: 'E1' },
-  { id: 'employee-2', initials: 'E2' },
-  { id: 'manager-1', initials: 'M1' },
-  { id: 'manager-2', initials: 'M2' },
-]
+
+function initialsFor(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('')
+}
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('catalog')
@@ -52,7 +52,8 @@ function App() {
   const [queueLoading, setQueueLoading] = useState(false)
   const [notice, setNotice] = useState('')
   const [actingOn, setActingOn] = useState<string | null>(null)
-  const [currentUser, setCurrentUser] = useState(users[0])
+  const [users, setUsers] = useState<Actor[]>([])
+  const [currentUser, setCurrentUser] = useState<Actor | null>(null)
 
   useEffect(() => {
       listRequestTypes(apiBaseUrl)
@@ -61,9 +62,19 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (activeTab !== 'teamqueue' && activeTab !== 'approvals') return
+    listActors(apiBaseUrl)
+      .then((actors) => {
+        setUsers(actors)
+        setCurrentUser((current) => current ?? actors[0] ?? null)
+      })
+      .catch(() => setNotice('Could not load the org chart. Start the NestJS server and try again.'))
+  }, [])
 
-    listApprovalQueue(apiBaseUrl, currentUser.id)
+  useEffect(() => {
+    if (activeTab !== 'teamqueue' && activeTab !== 'approvals') return
+    if (!currentUser) return
+
+    listApprovalQueue(apiBaseUrl, currentUser.employeeId)
       .then((items) => setQueue(items.map((item) => ({
         id: item.stepId,
         requestId: item.requestId,
@@ -80,13 +91,14 @@ function App() {
         setNotice('Could not load routing data. Start the NestJS server and try again.')
       })
       .finally(() => setQueueLoading(false))
-  }, [activeTab, currentUser.id])
+  }, [activeTab, currentUser])
 
   const decide = async (item: RoutingQueueItem, decision: 'approve' | 'reject', reason?: string) => {
+    if (!currentUser) return
     setActingOn(item.id)
     setNotice('')
     try {
-        await decideApproval(apiBaseUrl, item.decisionId, item.stepId, currentUser.id, decision, reason)
+        await decideApproval(apiBaseUrl, item.decisionId, item.stepId, currentUser.employeeId, decision, reason)
     } catch {
       setNotice('Could not reach the backend. Start the NestJS server and try again.')
       setActingOn(null)
@@ -190,11 +202,20 @@ function App() {
           </button>
           <label className="acting-user-picker">
             <span>Acting as</span>
-            <select value={currentUser.id} onChange={(event) => {
-              if (activeTab === 'teamqueue' || activeTab === 'approvals') setQueueLoading(true)
-              setCurrentUser(users.find((user) => user.id === event.target.value) ?? users[0])
-            }}>
-              {users.map((user) => <option key={user.id} value={user.id}>{user.initials} · {user.id}</option>)}
+            <select
+              value={currentUser?.employeeId ?? ''}
+              disabled={users.length === 0}
+              onChange={(event) => {
+                if (activeTab === 'teamqueue' || activeTab === 'approvals') setQueueLoading(true)
+                setCurrentUser(users.find((user) => user.employeeId === event.target.value) ?? users[0] ?? null)
+              }}
+            >
+              {users.length === 0 && <option value="">Loading org chart…</option>}
+              {users.map((user) => (
+                <option key={user.employeeId} value={user.employeeId}>
+                  {initialsFor(user.name)} · {user.name} ({user.department})
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -207,9 +228,9 @@ function App() {
               setIntakeFormOpen(true)
               setNotice('')
             }} />
-            {intakeFormOpen && <RequestCreator
+            {intakeFormOpen && currentUser && <RequestCreator
               apiBaseUrl={apiBaseUrl}
-              currentUserId={currentUser.id}
+              currentUserId={currentUser.employeeId}
               requestTypes={requestTypes}
               onSubmitted={(message) => {
                 setNotice(message)

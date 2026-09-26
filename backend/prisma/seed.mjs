@@ -9,8 +9,8 @@ const requestTypes = [
     name: 'New laptop / equipment',
     department: 'IT',
     schema: {
-      required: ['department'],
-      fields: [{ key: 'department', label: 'Department', type: 'text' }],
+      required: [],
+      fields: [],
     },
   },
   {
@@ -18,9 +18,8 @@ const requestTypes = [
     name: 'PTO / annual leave',
     department: 'HR',
     schema: {
-      required: ['department', 'startDate', 'endDate'],
+      required: ['startDate', 'endDate'],
       fields: [
-        { key: 'department', label: 'Department', type: 'text' },
         { key: 'startDate', label: 'Start date', type: 'date' },
         { key: 'endDate', label: 'End date', type: 'date' },
       ],
@@ -31,9 +30,8 @@ const requestTypes = [
     name: 'Desk relocation',
     department: 'Operations',
     schema: {
-      required: ['department', 'newLocation'],
+      required: ['newLocation'],
       fields: [
-        { key: 'department', label: 'Department', type: 'text' },
         { key: 'newLocation', label: 'New location', type: 'text' },
       ],
     },
@@ -46,7 +44,7 @@ const requests = [
     requesterId: 'employee-1',
     requestTypeId: 'new-laptop',
     description: 'My current laptop cannot run the required development tools.',
-    formData: { department: 'Engineering' },
+    formData: { department: 'IT' },
     status: 'Pending Approval',
     idempotencyKey: 'seed-request-001',
     createdAt: new Date('2026-01-15T09:00:00.000Z'),
@@ -67,7 +65,7 @@ const requests = [
     requesterId: 'employee-2',
     requestTypeId: 'pto-request',
     description: 'I would like to take annual leave for a family holiday.',
-    formData: { department: 'Finance', startDate: '2026-02-02', endDate: '2026-02-06' },
+    formData: { department: 'HR', startDate: '2026-02-02', endDate: '2026-02-06' },
     status: 'Approved',
     idempotencyKey: 'seed-request-002',
     createdAt: new Date('2026-01-10T11:30:00.000Z'),

@@ -91,12 +91,12 @@ curl -X POST http://localhost:3000/requests \
     "requesterId": "employee-1",
     "requestTypeId": "new-laptop",
     "description": "My laptop cannot run the required development tools.",
-    "formData": { "department": "Engineering" },
+    "formData": {},
     "idempotencyKey": "request-001"
   }'
 ```
 
-The response contains a generated request ID, `status: "Pending Approval"`, and both the initial `Submitted` event and the Routing handoff event.
+The backend attaches the authenticated actor's directory department to `formData`; the response contains a generated request ID, `status: "Pending Approval"`, and both the initial `Submitted` event and the Routing handoff event.
 
 List the live approval queue:
 
@@ -133,7 +133,7 @@ curl -i -X POST http://localhost:3000/requests \
     "requesterId": "employee-1",
     "requestTypeId": "new-laptop",
     "description": "This request is submitted for another employee.",
-    "formData": { "department": "Engineering" }
+    "formData": {}
   }'
 ```
 

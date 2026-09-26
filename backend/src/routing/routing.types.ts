@@ -46,10 +46,4 @@ export interface DecideApprovalInput {
   reason?: string;
 }
 
-/**
- * What the HTTP request body actually carries. approverId is deliberately
- * absent here: it's derived from the resolved actor identity (x-actor-id),
- * not taken from client-supplied JSON, so a caller can't claim to be a
- * different approver than the one their identity resolves to.
- */
 export type DecideApprovalRequestBody = Omit<DecideApprovalInput, 'approverId'>;
