@@ -32,3 +32,18 @@ export interface CreateRequestResponse {
   };
   replayed: boolean;
 }
+
+export interface RequestSummary {
+  id: string;
+  requestTypeId: string;
+  requestTypeName: string;
+  department: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  statusEvents: Array<{
+    status: string;
+    source: string;
+    createdAt: string;
+  }>;
+}

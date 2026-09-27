@@ -9,8 +9,8 @@ import ApprovalsView from './views/ApprovalsView'
 import ReportsView from './views/ReportsView'
 import ConfigView from './views/ConfigView'
 import RequestCreator from './components/RequestCreator'
-import { listRequestTypes } from './api/intakeApi'
-import type { RequestType } from './api/intakeApi'
+import { listMyRequests, listRequestTypes } from './api/intakeApi'
+import type { RequestSummary, RequestType } from './api/intakeApi'
 import { decideApproval, listApprovalQueue } from './api/routingApi'
 import {
   addFulfillmentComment,
@@ -63,6 +63,8 @@ function App() {
   const [currentUser, setCurrentUser] = useState<Actor | null>(null)
   const [fulfillmentQueue, setFulfillmentQueue] = useState<FulfillmentQueueItem[]>([])
   const [fulfillmentLoading, setFulfillmentLoading] = useState(false)
+  const [myRequests, setMyRequests] = useState<RequestSummary[]>([])
+  const [myRequestsLoading, setMyRequestsLoading] = useState(false)
   const shouldShowApprovals = currentUser?.roles.includes('approver') && !currentUser.roles.includes('fulfiller')
 
   useEffect(() => {
@@ -114,6 +116,18 @@ function App() {
       })
       .finally(() => setFulfillmentLoading(false))
   }, [activeTab, currentUser, shouldShowApprovals])
+
+  useEffect(() => {
+    if (activeTab !== 'myrequests' || !currentUser) return
+    setMyRequestsLoading(true)
+    listMyRequests(apiBaseUrl, currentUser.employeeId)
+      .then(setMyRequests)
+      .catch(() => {
+        setMyRequests([])
+        setNotice('Could not load your requests. Start the NestJS server and try again.')
+      })
+      .finally(() => setMyRequestsLoading(false))
+  }, [activeTab, currentUser])
 
   const refreshFulfillmentQueue = () => {
     if (!currentUser) return
@@ -223,7 +237,9 @@ function App() {
               >
                 <span className="material-symbols-outlined">{tab.icon}</span>
                 <span>{tab.label}</span>
-                {tab.key === 'myrequests' && <span className="tab-count">4</span>}
+                {tab.key === 'myrequests' && myRequests.length > 0 && (
+                  <span className="tab-count">{myRequests.length}</span>
+                )}
                 {tab.key === 'teamqueue' && <span className="tab-count alert">3</span>}
               </button>
             ))}
@@ -279,7 +295,7 @@ function App() {
           </section>
 
           <section className={`tab-pane ${activeTab === 'myrequests' ? 'visible' : 'hidden'}`}>
-            <MyRequestsView />
+            <MyRequestsView requests={myRequests} loading={myRequestsLoading} />
           </section>
 
           <section className={`tab-pane ${activeTab === 'teamqueue' ? 'visible' : 'hidden'}`}>

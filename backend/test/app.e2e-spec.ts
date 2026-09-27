@@ -80,6 +80,57 @@ describe('AppController (e2e)', () => {
       });
   });
 
+  it('lists only the acting employee\'s own requests, newest first', async () => {
+    const first = await request(app.getHttpServer())
+      .post('/requests')
+      .set('x-actor-id', 'employee-1')
+      .send({
+        requesterId: 'employee-1',
+        requestTypeId: 'new-laptop',
+        description: 'First request for the my-requests listing test.',
+        formData: {},
+        idempotencyKey: `mine-first-${Date.now()}`,
+      })
+      .expect(201);
+
+    const second = await request(app.getHttpServer())
+      .post('/requests')
+      .set('x-actor-id', 'employee-1')
+      .send({
+        requesterId: 'employee-1',
+        requestTypeId: 'desk-relocation',
+        description: 'Second request for the my-requests listing test.',
+        formData: { newLocation: '4th floor' },
+        idempotencyKey: `mine-second-${Date.now()}`,
+      })
+      .expect(201);
+
+    const mine = await request(app.getHttpServer())
+      .get('/requests/mine')
+      .set('x-actor-id', 'employee-1')
+      .expect(200);
+
+    const ids = mine.body.map((item: { id: string }) => item.id);
+    expect(ids.indexOf(second.body.request.id)).toBeLessThan(ids.indexOf(first.body.request.id));
+
+    const listed = mine.body.find((item: { id: string }) => item.id === second.body.request.id);
+    expect(listed).toMatchObject({
+      requestTypeName: 'Desk relocation',
+      department: 'Operations',
+      status: 'Pending Approval',
+    });
+    expect(listed.statusEvents.map((event: { status: string }) => event.status)).toEqual([
+      'Submitted',
+      'Pending Approval',
+    ]);
+
+    const someoneElse = await request(app.getHttpServer())
+      .get('/requests/mine')
+      .set('x-actor-id', 'employee-2')
+      .expect(200);
+    expect(someoneElse.body.some((item: { id: string }) => item.id === second.body.request.id)).toBe(false);
+  });
+
   it('denies a request when the actor is not the requester', () => {
     return request(app.getHttpServer())
       .post('/requests')

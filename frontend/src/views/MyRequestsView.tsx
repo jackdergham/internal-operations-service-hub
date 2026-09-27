@@ -1,12 +1,82 @@
-import { myRequestRows } from '../data'
+import type { RequestSummary } from '../api/intakeApi'
 
-export default function MyRequestsView() {
-  const requestDetails = [
-    { submitted: 'Today, 09:15', stage: 'In Progress', sla: '28 hrs remaining', action: 'View Trail', icon: 'schedule', tone: 'active' },
-    { submitted: 'Yesterday, 14:20', stage: 'Pending Approval', sla: '14 hrs remaining', action: 'View Trail', icon: 'pending', tone: 'pending' },
-    { submitted: 'Oct 18, 10:00', stage: 'Resolved', sla: 'Fulfilled in 6 hrs', action: 'Audit Closed', icon: 'check_circle', tone: 'resolved' },
-    { submitted: 'Oct 12, 16:45', stage: 'Resolved', sla: 'Completed', action: 'Receipt File', icon: 'check_circle', tone: 'resolved' },
-  ]
+// Canonical lifecycle from data-model.md's Request Intake & Lifecycle section:
+// Submitted -> Pending Approval -> Approved -> In Progress -> Resolved -> Closed
+// (Pending Approval -> Rejected is a terminal branch off that line, not a step on it.)
+const STAGES = ['Submitted', 'Pending Approval', 'Approved', 'In Progress', 'Resolved', 'Closed'] as const
+const STAGE_ICONS: Record<string, string> = {
+  Submitted: 'task_alt',
+  'Pending Approval': 'pending',
+  Approved: 'check',
+  'In Progress': 'sync',
+  Resolved: 'check_circle',
+  Closed: 'lock',
+}
+
+type Tone = 'pending' | 'active' | 'resolved' | 'rejected'
+
+function toneFor(status: string): Tone {
+  if (status === 'Rejected') return 'rejected'
+  if (status === 'Resolved' || status === 'Closed') return 'resolved'
+  if (status === 'In Progress') return 'active'
+  return 'pending'
+}
+
+function iconFor(status: string): string {
+  if (status === 'Rejected') return 'cancel'
+  if (status === 'Resolved' || status === 'Closed') return 'check_circle'
+  if (status === 'In Progress') return 'sync'
+  return 'pending'
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+  })
+}
+
+function eventTimeFor(request: RequestSummary, stage: string): string | null {
+  const event = request.statusEvents.find((candidate) => candidate.status === stage)
+  return event ? formatDate(event.createdAt) : null
+}
+
+type Props = {
+  requests: RequestSummary[]
+  loading: boolean
+}
+
+export default function MyRequestsView({ requests, loading }: Props) {
+  if (loading) {
+    return (
+      <div className="table-panel">
+        <div className="table-header"><h3>Loading your requests…</h3></div>
+      </div>
+    )
+  }
+
+  if (requests.length === 0) {
+    return (
+      <div className="table-panel">
+        <div className="table-header">
+          <h3>Submissions History &amp; Status</h3>
+          <span>0 Records Found</span>
+        </div>
+        <div className="request-table-scroll">
+          <p style={{ padding: '1.5rem' }}>
+            No requests yet. Submit one from the Catalog to see its progress here.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // The tracker panel visualizes one request's progress in detail; the most
+  // recently submitted one is the most likely to be worth watching closely.
+  const tracked = requests[0]
+  const rejected = tracked.status === 'Rejected'
+  const currentStageIndex = rejected
+    ? STAGES.indexOf('Pending Approval')
+    : (STAGES as readonly string[]).indexOf(tracked.status)
 
   return (
     <>
@@ -14,74 +84,98 @@ export default function MyRequestsView() {
         <div className="panel-header tracker-header">
           <div>
             <div className="eyebrow-label">TICKET TRACKER</div>
-            <h2>Active Request Pipeline: OpsHub Request Lifecycle</h2>
+            <h2>{tracked.requestTypeName} — #{tracked.id}</h2>
           </div>
-          <span className="mini-badge info">Step 3 of 5 In Progress</span>
+          <span className={`mini-badge ${rejected ? 'warning' : 'info'}`}>
+            {rejected
+              ? 'Rejected'
+              : `Step ${currentStageIndex + 1} of ${STAGES.length}${tracked.status === 'Closed' ? '' : ' — ' + tracked.status}`}
+          </span>
         </div>
 
         <div className="step-grid">
-          {[
-            { label: 'Submitted', meta: 'Oct 24, 09:15', icon: 'check', complete: true },
-            { label: 'Manager Approved', meta: 'Oct 24, 11:30', icon: 'check', complete: true },
-            { label: 'In Fulfillment', meta: 'Dave Miller (IT)', icon: 'sync', active: true },
-            { label: 'Dispatched', meta: 'Pending Prep', icon: '4', future: true },
-            { label: 'Delivered', meta: 'Awaiting closeout', icon: '5', future: true },
-          ].map((step) => (
-            <div key={step.label} className={`step-item ${step.complete ? 'complete' : ''} ${step.active ? 'current' : ''} ${step.future ? 'light' : ''}`}>
-              <div className={`step-bullet ${step.complete ? 'complete' : ''} ${step.active ? 'active' : ''}`}>
-                <span className="material-symbols-outlined">{step.icon}</span>
+          {STAGES.map((stage, index) => {
+            const isComplete = !rejected && index < currentStageIndex
+            const isActive = !rejected && index === currentStageIndex
+            const isFuture = rejected ? index > STAGES.indexOf('Pending Approval') : index > currentStageIndex
+            const time = eventTimeFor(tracked, stage)
+
+            return (
+              <div
+                key={stage}
+                className={`step-item ${isComplete ? 'complete' : ''} ${isActive ? 'current' : ''} ${isFuture ? 'light' : ''}`}
+              >
+                <div className={`step-bullet ${isComplete ? 'complete' : ''} ${isActive ? 'active' : ''}`}>
+                  <span className="material-symbols-outlined">{STAGE_ICONS[stage]}</span>
+                </div>
+                <strong>{stage}</strong>
+                <span>{time ?? (isFuture ? 'Not yet reached' : 'Pending')}</span>
               </div>
-              <strong>{step.label}</strong>
-              <span>{step.meta}</span>
+            )
+          })}
+          {rejected && (
+            <div className="step-item current">
+              <div className="step-bullet active">
+                <span className="material-symbols-outlined">cancel</span>
+              </div>
+              <strong>Rejected</strong>
+              <span>{eventTimeFor(tracked, 'Rejected') ?? 'Pending'}</span>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
       <div className="table-panel">
         <div className="table-header">
           <h3>Submissions History &amp; Status</h3>
-          <span>4 Records Found</span>
+          <span>{requests.length} Record{requests.length === 1 ? '' : 's'} Found</span>
         </div>
 
         <div className="request-table-scroll">
           <table>
-          <thead>
-            <tr>
-              <th>Ticket ID</th>
-              <th>Title &amp; Classification</th>
-              <th>Submitted</th>
-              <th>Current Stage</th>
-              <th>SLA Target</th>
-              <th className="request-action-heading">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {myRequestRows.map((row, index) => {
-              const details = requestDetails[index]
-
-              return (
-              <tr key={row.id}>
-                <td className="request-id-cell">#{row.id}</td>
-                <td>
-                  <div className="request-cell">
-                    <strong>{row.title}</strong>
-                    <span>{row.service}</span>
-                  </div>
-                </td>
-                <td className="request-muted-cell">{details.submitted}</td>
-                <td>
-                  <span className={`request-stage ${details.tone}`}>
-                    <span className="material-symbols-outlined">{details.icon}</span>
-                    {details.stage}
-                  </span>
-                </td>
-                <td className={`request-sla ${details.tone}`}>{details.sla}</td>
-                <td className="request-action-cell"><span className="request-action">{details.action}</span></td>
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Title &amp; Classification</th>
+                <th>Submitted</th>
+                <th>Current Stage</th>
+                <th>Last Update</th>
+                <th className="request-action-heading">Action</th>
               </tr>
-              )
-            })}
-          </tbody>
+            </thead>
+            <tbody>
+              {requests.map((row) => {
+                const tone = toneFor(row.status)
+                const lastEvent = row.statusEvents.at(-1)
+
+                return (
+                  <tr key={row.id}>
+                    <td className="request-id-cell">#{row.id}</td>
+                    <td>
+                      <div className="request-cell">
+                        <strong>{row.requestTypeName}</strong>
+                        <span>{row.department}</span>
+                      </div>
+                    </td>
+                    <td className="request-muted-cell">{formatDate(row.createdAt)}</td>
+                    <td>
+                      <span className={`request-stage ${tone}`}>
+                        <span className="material-symbols-outlined">{iconFor(row.status)}</span>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className={`request-sla ${tone}`}>
+                      {lastEvent ? formatDate(lastEvent.createdAt) : '—'}
+                    </td>
+                    <td className="request-action-cell">
+                      <span className="request-action">
+                        {row.status === 'Closed' || row.status === 'Rejected' ? 'View Trail' : 'Track Status'}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
           </table>
         </div>
       </div>

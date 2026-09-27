@@ -15,6 +15,7 @@ import { RoutingService } from '../routing/routing.service.js';
 import {
   CreateRequestInput,
   CreateRequestResponse,
+  RequestSummary,
 } from './intake.types.js';
 
 const requestTypes = [
@@ -164,6 +165,39 @@ export class IntakeService implements OnModuleInit {
       select: { id: true, name: true, department: true, schema: true },
       orderBy: { name: 'asc' },
     });
+  }
+
+  /**
+   * "Show me all my requests" — per data-model.md's Access section, filtered
+   * by requester_id. The caller's own identity (from x-actor-id, resolved by
+   * the controller) *is* the requesterId; there is no way to ask for anyone
+   * else's requests through this method, matching architecture.md's Trust
+   * boundary that a requester may only view their own requests.
+   */
+  async listMyRequests(requesterId: string): Promise<RequestSummary[]> {
+    const requests = await this.prisma.request.findMany({
+      where: { requesterId },
+      include: { statusEvents: true, requestType: { select: { name: true, department: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return requests.map((request: (typeof requests)[number]) => ({
+      id: request.id,
+      requestTypeId: request.requestTypeId,
+      requestTypeName: request.requestType.name,
+      department: request.requestType.department,
+      description: request.description,
+      status: request.status,
+      createdAt: request.createdAt.toISOString(),
+      statusEvents: request.statusEvents
+        .slice()
+        .sort((a: { createdAt: Date }, b: { createdAt: Date }) => a.createdAt.getTime() - b.createdAt.getTime())
+        .map((event: { status: string; source: string; createdAt: Date }) => ({
+          status: event.status,
+          source: event.source,
+          createdAt: event.createdAt.toISOString(),
+        })),
+    }));
   }
 
   private validateAuthorization(actorId: string | undefined, requesterId: string): void {

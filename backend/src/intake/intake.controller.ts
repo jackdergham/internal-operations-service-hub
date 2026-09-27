@@ -19,6 +19,12 @@ export class IntakeController {
     return this.intakeService.listRequestTypes();
   }
 
+  @Get('requests/mine')
+  @UseGuards(RequireKnownActorGuard)
+  listMyRequests(@CurrentActor() actor: Actor) {
+    return this.intakeService.listMyRequests(actor.employeeId);
+  }
+
   @Post('requests/assist')
   @UseGuards(RequireKnownActorGuard)
   assistRequest(@CurrentActor() actor: Actor, @Body() input: AssistRequestInput) {

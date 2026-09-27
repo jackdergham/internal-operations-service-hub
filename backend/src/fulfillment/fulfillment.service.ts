@@ -120,7 +120,7 @@ export class FulfillmentService {
       orderBy: { createdAt: 'asc' },
     });
 
-    return comments.map((comment) => ({
+    return comments.map((comment: (typeof comments)[number]) => ({
       id: comment.id,
       requestId: comment.requestId,
       authorId: comment.authorId,

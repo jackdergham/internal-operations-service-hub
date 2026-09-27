@@ -24,6 +24,23 @@ type RequestResponse = {
   }
 }
 
+export type RequestStatusEvent = {
+  status: string
+  source: string
+  createdAt: string
+}
+
+export type RequestSummary = {
+  id: string
+  requestTypeId: string
+  requestTypeName: string
+  department: string
+  description: string
+  status: string
+  createdAt: string
+  statusEvents: RequestStatusEvent[]
+}
+
 async function readError(response: Response, fallback: string): Promise<Error> {
   const payload = await response.json().catch(() => ({})) as { message?: string }
   return new Error(payload.message ?? fallback)
@@ -33,6 +50,14 @@ export async function listRequestTypes(apiBaseUrl: string): Promise<RequestType[
   const response = await fetch(`${apiBaseUrl}/request-types`)
   if (!response.ok) throw await readError(response, 'Request types could not be loaded')
   return response.json() as Promise<RequestType[]>
+}
+
+export async function listMyRequests(apiBaseUrl: string, actorId: string): Promise<RequestSummary[]> {
+  const response = await fetch(`${apiBaseUrl}/requests/mine`, {
+    headers: { 'x-actor-id': actorId },
+  })
+  if (!response.ok) throw await readError(response, 'Your requests could not be loaded.')
+  return response.json() as Promise<RequestSummary[]>
 }
 
 export async function assistRequest(
