@@ -8,7 +8,12 @@ import {
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
 import type { Actor } from '../directory/directory.types.js';
-import type { AddCommentInput, QueueItem } from './fulfillment.types.js';
+import type {
+  AddCommentInput,
+  CommentVisibility,
+  FulfillmentComment,
+  QueueItem,
+} from './fulfillment.types.js';
 
 const ACTIONABLE_ROLES = ['fulfiller', 'admin'] as const;
 
@@ -104,6 +109,25 @@ export class FulfillmentService {
         visibility: input.visibility ?? 'internal',
       },
     });
+  }
+
+  async listComments(requestId: string, actor: Actor): Promise<FulfillmentComment[]> {
+    this.requireActionableRole(actor);
+    await this.mustFindAssignment(requestId);
+
+    const comments = await this.prisma.fulfillmentComment.findMany({
+      where: { requestId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return comments.map((comment) => ({
+      id: comment.id,
+      requestId: comment.requestId,
+      authorId: comment.authorId,
+      body: comment.body,
+      visibility: comment.visibility as CommentVisibility,
+      createdAt: comment.createdAt.toISOString(),
+    }));
   }
 
   async resolve(requestId: string, actor: Actor): Promise<void> {

@@ -66,13 +66,29 @@ const requests = [
     requestTypeId: 'pto-request',
     description: 'I would like to take annual leave for a family holiday.',
     formData: { department: 'HR', startDate: '2026-02-02', endDate: '2026-02-06' },
-    status: 'Approved',
+    status: 'In Progress',
     idempotencyKey: 'seed-request-002',
     createdAt: new Date('2026-01-10T11:30:00.000Z'),
     events: [
       ['seed-event-002-submitted', 'Submitted', 'intake', '2026-01-10T11:30:00.000Z'],
       ['seed-event-002-pending', 'Pending Approval', 'routing', '2026-01-10T11:30:01.000Z'],
       ['seed-event-002-approved', 'Approved', 'routing', '2026-01-11T08:15:00.000Z'],
+      ['seed-event-002-in-progress', 'In Progress', 'fulfillment', '2026-01-11T08:16:00.000Z'],
+    ],
+    queueAssignment: {
+      id: 'seed-assignment-002',
+      queue: 'HR',
+      assignedFulfillerId: 'fulfiller-hr-1',
+      createdAt: new Date('2026-01-11T08:16:00.000Z'),
+    },
+    comments: [
+      {
+        id: 'seed-comment-002',
+        authorId: 'fulfiller-hr-1',
+        body: 'Leave dates confirmed with the HR team.',
+        visibility: 'internal',
+        createdAt: new Date('2026-01-11T08:20:00.000Z'),
+      },
     ],
   },
   {
@@ -98,7 +114,7 @@ async function main() {
   }
 
   for (const request of requests) {
-    const { events, attachment, ...requestData } = request;
+    const { events, attachment, queueAssignment, comments, ...requestData } = request;
 
     await prisma.request.upsert({
       where: { id: request.id },
@@ -111,6 +127,22 @@ async function main() {
         where: { id },
         update: { status, source, createdAt: new Date(createdAt) },
         create: { id, requestId: request.id, status, source, createdAt: new Date(createdAt) },
+      });
+    }
+
+    if (queueAssignment) {
+      await prisma.queueAssignment.upsert({
+        where: { requestId: request.id },
+        update: queueAssignment,
+        create: { ...queueAssignment, requestId: request.id },
+      });
+    }
+
+    for (const comment of comments ?? []) {
+      await prisma.fulfillmentComment.upsert({
+        where: { id: comment.id },
+        update: comment,
+        create: { ...comment, requestId: request.id },
       });
     }
 

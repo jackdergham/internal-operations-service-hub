@@ -38,6 +38,11 @@ export class FulfillmentController {
     return this.fulfillmentService.addComment(requestId, actor, body);
   }
 
+  @Get(':requestId/comments')
+  listComments(@Param('requestId') requestId: string, @CurrentActor() actor: Actor) {
+    return this.fulfillmentService.listComments(requestId, actor);
+  }
+
   @Post(':requestId/resolve')
   resolve(@Param('requestId') requestId: string, @CurrentActor() actor: Actor) {
     return this.fulfillmentService.resolve(requestId, actor);

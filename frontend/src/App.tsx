@@ -12,6 +12,14 @@ import RequestCreator from './components/RequestCreator'
 import { listRequestTypes } from './api/intakeApi'
 import type { RequestType } from './api/intakeApi'
 import { decideApproval, listApprovalQueue } from './api/routingApi'
+import {
+  addFulfillmentComment,
+  assignFulfillmentRequest,
+  closeFulfillmentRequest,
+  listFulfillmentQueue,
+  resolveFulfillmentRequest,
+} from './api/fulfillmentApi'
+import type { FulfillmentQueueItem } from './api/fulfillmentApi'
 import { listActors } from './api/directoryApi'
 import type { Actor } from './api/directoryApi'
 import { useEffect, useState } from 'react'
@@ -51,9 +59,11 @@ function App() {
   const [queue, setQueue] = useState<RoutingQueueItem[]>([])
   const [queueLoading, setQueueLoading] = useState(false)
   const [notice, setNotice] = useState('')
-  const [actingOn, setActingOn] = useState<string | null>(null)
   const [users, setUsers] = useState<Actor[]>([])
   const [currentUser, setCurrentUser] = useState<Actor | null>(null)
+  const [fulfillmentQueue, setFulfillmentQueue] = useState<FulfillmentQueueItem[]>([])
+  const [fulfillmentLoading, setFulfillmentLoading] = useState(false)
+  const shouldShowApprovals = currentUser?.roles.includes('approver') && !currentUser.roles.includes('fulfiller')
 
   useEffect(() => {
       listRequestTypes(apiBaseUrl)
@@ -71,7 +81,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (activeTab !== 'teamqueue' && activeTab !== 'approvals') return
+    if ((activeTab !== 'teamqueue' && activeTab !== 'approvals') || !shouldShowApprovals) return
     if (!currentUser) return
 
     listApprovalQueue(apiBaseUrl, currentUser.employeeId)
@@ -91,23 +101,51 @@ function App() {
         setNotice('Could not load routing data. Start the NestJS server and try again.')
       })
       .finally(() => setQueueLoading(false))
-  }, [activeTab, currentUser])
+  }, [activeTab, currentUser, shouldShowApprovals])
+
+  useEffect(() => {
+    if (activeTab !== 'teamqueue' || !currentUser || shouldShowApprovals) return
+    setFulfillmentLoading(true)
+    listFulfillmentQueue(apiBaseUrl, currentUser.employeeId)
+      .then(setFulfillmentQueue)
+      .catch(() => {
+        setFulfillmentQueue([])
+        setNotice('Could not load fulfillment data. Start the NestJS server and try again.')
+      })
+      .finally(() => setFulfillmentLoading(false))
+  }, [activeTab, currentUser, shouldShowApprovals])
+
+  const refreshFulfillmentQueue = () => {
+    if (!currentUser) return
+    setFulfillmentLoading(true)
+    listFulfillmentQueue(apiBaseUrl, currentUser.employeeId)
+      .then(setFulfillmentQueue)
+      .catch(() => setNotice('Could not refresh fulfillment data.'))
+      .finally(() => setFulfillmentLoading(false))
+  }
+
+  const runFulfillmentAction = async (action: () => Promise<void>, successMessage: string) => {
+    try {
+      await action()
+      refreshFulfillmentQueue()
+      showToast(successMessage)
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'The fulfillment action failed.')
+    }
+  }
 
   const decide = async (item: RoutingQueueItem, decision: 'approve' | 'reject', reason?: string) => {
     if (!currentUser) return
-    setActingOn(item.id)
     setNotice('')
     try {
         await decideApproval(apiBaseUrl, item.decisionId, item.stepId, currentUser.employeeId, decision, reason)
     } catch {
       setNotice('Could not reach the backend. Start the NestJS server and try again.')
-      setActingOn(null)
       return
     }
     setQueue((current) => current.map((candidate) => candidate.id === item.id
       ? { ...candidate, status: decision === 'approve' ? 'Approved' : 'Rejected' }
       : candidate))
-    setActingOn(null)
     setRejectModalOpen(false)
     setRejectReason('')
     showToast(`${item.requestId} marked ${decision === 'approve' ? 'approved' : 'rejected'}.`)
@@ -245,27 +283,43 @@ function App() {
           </section>
 
           <section className={`tab-pane ${activeTab === 'teamqueue' ? 'visible' : 'hidden'}`}>
-            <TeamQueueView commentMode={commentMode} setCommentMode={setCommentMode} showToast={showToast} queue={queue} />
-            <div className="table-panel" style={{ marginTop: 24 }}>
-              <div className="table-header">
-                <h3>Live routing queue</h3>
-                <span>{queue.filter((item) => item.status === 'Pending').length} awaiting decision</span>
-              </div>
-              {notice && <div className="empty-state" role="status">{notice}</div>}
-              {queue.map((item) => (
-                <div className="field-row" key={item.id}>
-                  <div className="field-copy">
-                    <strong>{item.title}</strong>
-                    <span>{item.requestId} · {item.category} · {item.requester} · {item.submitted}</span>
-                  </div>
-                  <span className={`state-badge ${item.status.toLowerCase()}`}>{item.status}</span>
-                  {item.status === 'Pending' && <>
-                    <button type="button" className="secondary-action small" disabled={actingOn === item.id} onClick={() => handleRejectOpen(item.requestId)}>Reject</button>
-                    <button type="button" className="primary-action small" disabled={actingOn === item.id} onClick={() => void decide(item, 'approve')}>Approve</button>
-                  </>}
-                </div>
-              ))}
-            </div>
+            {shouldShowApprovals ? (
+              <ApprovalsView
+                approvalCards={queue}
+                handleBulkApproveAll={handleBulkApproveAll}
+                handleRejectOpen={handleRejectOpen}
+                handleApprove={(item) => { void decide(item, 'approve') }}
+                loading={queueLoading}
+              />
+            ) : (
+              <TeamQueueView
+                apiBaseUrl={apiBaseUrl}
+                currentUserId={currentUser?.employeeId ?? ''}
+                commentMode={commentMode}
+                setCommentMode={setCommentMode}
+                showToast={showToast}
+                notice={notice}
+                loading={fulfillmentLoading}
+                queue={fulfillmentQueue}
+                onRefresh={refreshFulfillmentQueue}
+                onAssign={(requestId) => currentUser && void runFulfillmentAction(
+                  () => assignFulfillmentRequest(apiBaseUrl, currentUser.employeeId, requestId),
+                  `${requestId} assigned to you.`,
+                )}
+                onResolve={(requestId) => currentUser && void runFulfillmentAction(
+                  () => resolveFulfillmentRequest(apiBaseUrl, currentUser.employeeId, requestId),
+                  `${requestId} marked resolved.`,
+                )}
+                onClose={(requestId) => currentUser && void runFulfillmentAction(
+                  () => closeFulfillmentRequest(apiBaseUrl, currentUser.employeeId, requestId),
+                  `${requestId} closed.`,
+                )}
+                onComment={(requestId, body, visibility) => currentUser && void runFulfillmentAction(
+                  () => addFulfillmentComment(apiBaseUrl, currentUser.employeeId, requestId, body, visibility),
+                  'Comment posted to the fulfillment audit trail.',
+                )}
+              />
+            )}
           </section>
 
           <section className={`tab-pane ${activeTab === 'approvals' ? 'visible' : 'hidden'}`}>

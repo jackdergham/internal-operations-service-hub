@@ -1,24 +1,67 @@
-import type { CommentMode, RoutingQueueItem } from '../types'
+import { useEffect, useState } from 'react'
+import type { CommentMode } from '../types'
+import type { FulfillmentComment, FulfillmentQueueItem } from '../api/fulfillmentApi'
+import { listFulfillmentComments } from '../api/fulfillmentApi'
 
 type Props = {
   commentMode: CommentMode
   setCommentMode: (mode: CommentMode) => void
   showToast: (message: string) => void
-  queue: RoutingQueueItem[]
+  apiBaseUrl: string
+  currentUserId: string
+  notice: string
+  loading: boolean
+  queue: FulfillmentQueueItem[]
+  onRefresh: () => void
+  onAssign: (requestId: string) => void
+  onResolve: (requestId: string) => void
+  onClose: (requestId: string) => void
+  onComment: (requestId: string, body: string, visibility: FulfillmentComment['visibility']) => void
 }
 
-export default function TeamQueueView({ commentMode, setCommentMode, showToast, queue }: Props) {
+export default function TeamQueueView({
+  apiBaseUrl,
+  currentUserId,
+  commentMode,
+  setCommentMode,
+  showToast,
+  notice,
+  loading,
+  queue,
+  onRefresh,
+  onAssign,
+  onResolve,
+  onClose,
+  onComment,
+}: Props) {
+  const [selectedRequestId, setSelectedRequestId] = useState(queue[0]?.requestId ?? '')
+  const [comments, setComments] = useState<FulfillmentComment[]>([])
+  const [commentBody, setCommentBody] = useState('')
+  const selected = queue.find((item) => item.requestId === selectedRequestId) ?? queue[0]
+  const selectedRequestIdForComments = selected?.requestId ?? ''
+
+  useEffect(() => {
+    if (!selectedRequestIdForComments || !currentUserId) return
+    listFulfillmentComments(apiBaseUrl, currentUserId, selectedRequestIdForComments)
+      .then(setComments)
+      .catch(() => setComments([]))
+  }, [apiBaseUrl, currentUserId, selectedRequestIdForComments])
+
+  const postComment = () => {
+    if (!selected || !commentBody.trim()) return
+    onComment(selected.requestId, commentBody.trim(), commentMode === 'internal' ? 'internal' : 'requester-visible')
+    setCommentBody('')
+  }
+
   return (
     <>
       <div className="queue-toolbar-row">
         <div className="toolbar-group">
           <button type="button" className="filter-button selected">All queues</button>
-          <button type="button" className="filter-button">High priority</button>
-          <button type="button" className="filter-button">Escalated</button>
         </div>
         <div className="toolbar-right">
-          <span>Live backend data</span>
-          <button type="button" className="secondary-action small" onClick={() => showToast('Manual refresh complete')}>
+          <span>{loading ? 'Loading fulfillment data...' : 'Live fulfillment data'}</span>
+          <button type="button" className="secondary-action small" onClick={onRefresh} aria-label="Refresh fulfillment queue">
             <span className="material-symbols-outlined">refresh</span>
           </button>
         </div>
@@ -28,7 +71,7 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast, 
         <div className="queue-panel">
           <div className="table-header">
             <h3>Operational Queue</h3>
-            <span>{queue.length} pending items</span>
+            <span>{queue.length} open items</span>
           </div>
           <table>
             <thead>
@@ -42,12 +85,12 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast, 
             </thead>
             <tbody>
               {queue.map((row) => (
-                <tr key={row.id} className="queue-row" onClick={() => showToast(`Opened ${row.requestId}`)}>
-                  <td><strong>{row.title}</strong><span className="ticket-id">{row.requestId}</span></td>
-                  <td>{row.requester}</td>
-                  <td>{row.category}</td>
-                  <td>{row.submitted}</td>
-                  <td><span className="risk-badge medium">Pending</span></td>
+                <tr key={row.requestId} className="queue-row" onClick={() => setSelectedRequestId(row.requestId)}>
+                  <td><strong>{row.requestTypeId}</strong><span className="ticket-id">{row.requestId}</span></td>
+                  <td>{row.requesterId}</td>
+                  <td>{row.queue}</td>
+                  <td>{new Date(row.createdAt).toLocaleString()}</td>
+                  <td><span className="risk-badge medium">{row.status}</span></td>
                 </tr>
               ))}
             </tbody>
@@ -58,7 +101,7 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast, 
           <div className="detail-header">
             <div>
               <div className="eyebrow-label">REQUEST DETAIL</div>
-              <h3>{queue[0]?.requestId ?? 'No selection'}</h3>
+              <h3>{selected?.requestId ?? 'No selection'}</h3>
             </div>
             <button type="button" className="secondary-action small" onClick={() => showToast('Ticket flagged for follow-up')}>
               <span className="material-symbols-outlined">flag</span>
@@ -68,16 +111,28 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast, 
           <div className="requester-block">
             <div className="avatar small">NC</div>
             <div>
-              <strong>{queue[0]?.requester ?? 'No pending requester'}</strong>
-                <span>{queue[0]?.category ?? 'Live routing queue'}</span>
+              <strong>{selected?.requesterId ?? 'No pending requester'}</strong>
+                <span>{selected?.queue ?? 'Live fulfillment queue'}</span>
             </div>
             <span className="mini-badge warning">Priority</span>
           </div>
 
           <div className="detail-copy">
-            <div><span>Request type</span><strong>{queue[0]?.title ?? 'No pending request'}</strong></div>
-            <div><span>Assigned queue</span><strong>{queue[0]?.category ?? 'Not assigned'}</strong></div>
-            <div><span>Submitted</span><strong>{queue[0]?.submitted ?? 'No pending request'}</strong></div>
+            <div><span>Request type</span><strong>{selected?.requestTypeId ?? 'No pending request'}</strong></div>
+            <div><span>Assigned queue</span><strong>{selected?.queue ?? 'Not assigned'}</strong></div>
+            <div><span>Status</span><strong>{selected?.status ?? 'No pending request'}</strong></div>
+            <div><span>Fulfiller</span><strong>{selected?.assignedFulfillerId ?? 'Unassigned'}</strong></div>
+          </div>
+
+          <div className="comment-panel">
+            <strong>Request comments</strong>
+            {comments.length === 0 && <span className="comment-hint">No comments yet.</span>}
+            {comments.map((comment) => (
+              <div key={comment.id} className="field-copy">
+                <strong>{comment.authorId}</strong>
+                <span>{comment.body} · {new Date(comment.createdAt).toLocaleString()}</span>
+              </div>
+            ))}
           </div>
 
           <div className="comment-panel">
@@ -86,14 +141,20 @@ export default function TeamQueueView({ commentMode, setCommentMode, showToast, 
               <button type="button" className={commentMode === 'reply' ? 'active' : ''} onClick={() => setCommentMode('reply')}>Reply</button>
             </div>
             <span className="comment-hint">{commentMode === 'internal' ? 'Only visible to Agents' : 'Customer will receive email notification'}</span>
-            <textarea placeholder={commentMode === 'internal' ? 'Add confidential internal fulfillment note...' : 'Reply to Alex Morgan...'} rows={4} />
-            <button type="button" className="primary-action small" onClick={() => showToast('Comment appended to ticket audit trail')}>
+            <textarea value={commentBody} onChange={(event) => setCommentBody(event.target.value)} placeholder={commentMode === 'internal' ? 'Add confidential internal fulfillment note...' : 'Reply to requester...'} rows={4} />
+            <button type="button" className="primary-action small" onClick={postComment} disabled={!selected || !commentBody.trim()}>
               <span className="material-symbols-outlined">send</span>
               <span>Post update</span>
             </button>
           </div>
 
-          {queue.length === 0 && <div className="empty-state">No pending routing decisions for this approver.</div>}
+          <div className="toolbar-group">
+            {selected?.assignedFulfillerId !== currentUserId && <button type="button" className="secondary-action small" onClick={() => selected && onAssign(selected.requestId)}>Assign to me</button>}
+            {selected?.status === 'In Progress' && <button type="button" className="primary-action small" onClick={() => selected && onResolve(selected.requestId)}>Resolve</button>}
+            {selected?.status === 'Resolved' && <button type="button" className="primary-action small" onClick={() => selected && onClose(selected.requestId)}>Close</button>}
+          </div>
+
+          {(queue.length === 0 || notice) && <div className="empty-state" role="status">{notice || 'No fulfillment items for this queue.'}</div>}
         </aside>
       </div>
     </>
