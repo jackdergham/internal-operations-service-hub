@@ -94,3 +94,45 @@ Data flow of functional requirements 2 (routing) and 4 (approvals) from [[produc
 - **Approver is unavailable or never responds**: Escalation mechanism (timeout → reassign to a backup approver or notify an Admin), the timeout values are configuration, not hardcoded.
 - **Org-chart data is missing or incomplete** (e.g. requester has no manager on file): fallback to a designated default (e.g. a department head, or an Admin queue).
 - **Routing rule itself is misconfigured** (e.g. a chain that loops back on itself): this should be caught before it can affect a live request, not discovered mid-flow.
+
+---
+
+# Fulfillment & Queue Management
+
+![[fulfill_data_flow.svg]]
+
+Data flow of functional requirement 5 (fulfillment) from [[product-spec]]
+
+# Important data flows:
+
+1. A request becomes ready for fulfillment the moment its RoutingDecision reaches `ReadyForQueue` (approved, or direct-routed with no approval needed) — see the Routing & Approval Engine section above.
+2. This component creates a QueueAssignment for the request, placing it in the destination queue (currently the request type's department), and the Request's status moves to `In Progress`.
+3. A fulfiller in that queue sees the request appear; they may comment, request clarification from the requester, reassign it to a different queue, or resolve it.
+4. Resolving moves status to `Resolved`; closing moves it to `Closed`. Both are logged as StatusEvents, same as every other status change in the Request Intake & Lifecycle component.
+5. Reassignment changes which queue the request sits in but does not change its status — the request is still `In Progress`, just visible to a different team.
+
+# Actors:
+
+- **Fulfiller / Agent**: sees the queue(s) for their own department, comments, requests clarification, resolves, closes.
+- **Admin**: can reassign a request to a different queue if it landed in the wrong one, same override relationship the Routing & Approval Engine has for approval routing.
+- **Requester**: not a direct actor here, but receives requester-visible comments and sees status changes via the Request Intake & Lifecycle component.
+
+# System boundary:
+
+- **In scope for this component:** assigning a ready request to a queue, tracking which fulfiller (if any) has picked it up, fulfillment-side comments, resolving/closing requests, manual reassignment between queues.
+- **Out of scope for this component:** deciding whether a request needed approval (Routing & Approval Engine), owning the Request record or its full status history (Request Intake & Lifecycle owns both; this component only triggers transitions on it), sending notifications, defining what queues exist in the first place (currently derived directly from request type department; a real Admin & Configuration component, not yet documented, would own that mapping).
+
+# External dependencies:
+
+- **Request Intake & Lifecycle** (above): owns the Request record this component updates the status of.
+- **Directory** (mock org chart): a fulfiller's department determines which queue(s) they see; reused the same way Routing & Approval Engine uses it for manager resolution.
+
+# Trust / Authorization boundaries:
+
+- Only actors with the `fulfiller` or `admin` role may act on a queued request (comment, resolve, close, reassign) — matches the Trust boundary pattern already used for approvers in Routing & Approval Engine.
+- A fulfiller only sees requests in their own department's queue; only an Admin can move a request between queues, mirroring the Routing & Approval Engine's manual-reassignment boundary.
+
+# Failure scenarios:
+
+- **A queue has no active fulfillers**: per [[product-spec]]'s failure scenarios, a request should not silently sit unseen — this component doesn't yet implement an alert for that case, but the queue assignment is always visible to any admin regardless of department, so nothing is fully invisible even without one.
+- **Request was routed to the wrong queue**: handled the same way as Routing & Approval Engine's misconfigured-chain scenario — reassignment is a correction path, not a resubmission; the original queue assignment is preserved in history (via StatusEvents on the Request), not erased.

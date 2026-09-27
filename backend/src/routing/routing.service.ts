@@ -10,7 +10,10 @@ import {
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
 import { DirectoryService } from '../directory/directory.service.js';
+import { FulfillmentService } from '../fulfillment/fulfillment.service.js';
 import { DecideApprovalInput, RoutingDecision, RoutingQueueItem } from './routing.types.js';
+
+const DEFAULT_QUEUE = 'General';
 
 const managerByRequester: Record<string, string> = {
   'employee-1': 'manager-1',
@@ -25,6 +28,7 @@ export class RoutingService implements OnModuleInit {
   constructor(
     @Optional() private readonly prisma?: PrismaService,
     @Optional() private readonly directoryService?: DirectoryService,
+    @Optional() private readonly fulfillmentService?: FulfillmentService,
   ) {
     this.addSeedDecision();
   }
@@ -35,17 +39,36 @@ export class RoutingService implements OnModuleInit {
     const pendingRequests = await this.prisma.request.findMany({
       where: { status: 'Pending Approval' },
       orderBy: { createdAt: 'asc' },
+      include: { requestType: true },
     });
 
     for (const request of pendingRequests) {
-      this.addRequestDecision(request.id, request.requesterId, request.requestTypeId, request.createdAt);
+      this.addRequestDecision(
+        request.id,
+        request.requesterId,
+        request.requestTypeId,
+        request.createdAt,
+        request.requestType.department,
+      );
     }
   }
 
-  async registerRequest(request: { id: string; requesterId: string; requestTypeId: string; createdAt: Date }): Promise<void> {
+  async registerRequest(request: {
+    id: string;
+    requesterId: string;
+    requestTypeId: string;
+    createdAt: Date;
+    department?: string;
+  }): Promise<void> {
     if (this.decisions.has(`decision-${request.id}`)) return;
 
-    this.addRequestDecision(request.id, request.requesterId, request.requestTypeId, request.createdAt);
+    this.addRequestDecision(
+      request.id,
+      request.requesterId,
+      request.requestTypeId,
+      request.createdAt,
+      request.department,
+    );
 
     if (!this.prisma) return;
 
@@ -108,6 +131,13 @@ export class RoutingService implements OnModuleInit {
           data: { id: randomUUID(), requestId: routingDecision.requestId, status: requestStatus, source: 'routing' },
         }),
       ]);
+
+      if (input.decision === 'approve') {
+        await this.fulfillmentService?.registerReadyForQueue({
+          id: routingDecision.requestId,
+          queue: routingDecision.destinationQueue,
+        });
+      }
     }
 
     return this.cloneDecision(routingDecision);
@@ -116,18 +146,24 @@ export class RoutingService implements OnModuleInit {
   private addSeedDecision(): void {
     this.decisions.set('decision-1', {
       id: 'decision-1', requestId: 'request-1', requesterId: 'employee-1', requestTypeId: 'new-laptop',
-      status: 'AwaitingApproval', destinationQueue: 'it-support', submittedAt: new Date().toISOString(),
+      status: 'AwaitingApproval', destinationQueue: 'IT', submittedAt: new Date().toISOString(),
       approvalSteps: [{ id: 'step-1', stepNumber: 1, approverId: 'manager-1', status: 'Pending' }],
     });
   }
 
-  private addRequestDecision(id: string, requesterId: string, requestTypeId: string, submittedAt: Date): void {
+  private addRequestDecision(
+    id: string,
+    requesterId: string,
+    requestTypeId: string,
+    submittedAt: Date,
+    department?: string,
+  ): void {
     const decisionId = `decision-${id}`;
     if (this.decisions.has(decisionId)) return;
 
     this.decisions.set(decisionId, {
       id: decisionId, requestId: id, requesterId, requestTypeId, status: 'AwaitingApproval',
-      destinationQueue: 'it-support', submittedAt: submittedAt.toISOString(),
+      destinationQueue: department ?? DEFAULT_QUEUE, submittedAt: submittedAt.toISOString(),
       approvalSteps: [{ id: `step-${id}`, stepNumber: 1, approverId: this.resolveApprover(requesterId), status: 'Pending' }],
     });
   }

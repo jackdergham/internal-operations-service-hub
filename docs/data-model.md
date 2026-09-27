@@ -132,3 +132,57 @@
 - `(status, step_started_at)` on ApprovalStepInstance. Supports the escalation sweep
 - `request_id` on RoutingDecision. Supports the single-request status lookup
 - No index proposed on RoutingDecision.status alone. Current known queries always filter by request or by approver/time, not by decision status in isolation.
+
+---
+
+# Fulfillment & Queue Management
+
+## 1. Domain
+
+**Entities, relationships, cardinality, ownership:**
+
+![[fulfill_er.svg]]
+
+- **QueueAssignment**: which queue a request currently sits in, and which fulfiller (if any) has picked it up. Created the moment a request becomes ready for fulfillment.
+    - 1 Request (owned by Request Intake & Lifecycle, above) → 0..1 QueueAssignment
+    - Reassignment updates the existing QueueAssignment's `queue`, it does not create a new one — there is always at most one current assignment per request.
+
+- **FulfillmentComment**: a note logged against a request during fulfillment, either internal (fulfiller-only) or requester-visible.
+    - 1 Request → 0..many FulfillmentComment
+
+**Ownership summary:**
+- Owned here: QueueAssignment, FulfillmentComment
+- Read-only, owned elsewhere: Request itself and its `status` field (Request Intake & Lifecycle, above, though this component is one of the things that triggers a status transition on it), RequestType.department (used as the queue identifier), Actor/directory data (external)
+
+## 2. Lifecycle + Rules
+
+**Request status transitions this component drives** (continuing the sequence from Request Intake & Lifecycle, above):
+`Approved → In Progress` (on QueueAssignment creation)
+`In Progress → Resolved` (fulfiller action)
+`Resolved → Closed` (fulfiller or admin action)
+
+**Invariants:**
+- A QueueAssignment can only be created once a request's RoutingDecision has reached `ReadyForQueue` — there is no path for a request to appear in a fulfillment queue before approval (or direct routing) has completed, matching the Routing & Approval Engine's own invariant that a rejected request never proceeds.
+- Only one QueueAssignment exists per request at a time; reassignment mutates `queue` on the existing row rather than creating a second, competing assignment.
+- A request may only move to `Closed` from `Resolved`, never directly from `In Progress` — a request must be marked resolved before it can be closed, so there is always a record of the fulfiller's own "I believe this is done" step distinct from the closing action.
+
+## 3. Storage
+
+**Durable vs. derived:**
+- **Durable:** QueueAssignment, FulfillmentComment — the actual facts of where a request has been queued and what's been said about it during fulfillment.
+- **Derived, not duplicated:** which queue "counts" as backlog for reporting purposes is derivable by joining QueueAssignment with Request.status — no separate backlog-count field is stored, avoiding yet another value that could drift from the underlying records (same reasoning the Routing & Approval Engine's Storage section applied to "is this request awaiting approval").
+
+**Relational vs. document reasoning:**
+- Both QueueAssignment and FulfillmentComment fit relational modeling well: QueueAssignment has a strict one-to-one relationship with Request that benefits from a foreign-key constraint, and FulfillmentComment is ordered, append-only history much like StatusEvent in Request Intake & Lifecycle.
+
+## 4. Access
+
+**Important queries / access patterns:**
+- "What's in my department's queue?" (fulfiller's view) — QueueAssignment filtered by `queue = <fulfiller's department>`, joined to Request for status/description. This is the component's highest-frequency read; justifies an index on `queue`.
+- "Who has this request been assigned to?" — read by `request_id`, the natural primary-key lookup (QueueAssignment is keyed 1:1 with Request).
+- "Show me all comments on request X" — FulfillmentComment filtered by `request_id`, ordered by `created_at`; justifies an index on `(request_id, created_at)`, the same pattern used for StatusEvent.
+
+**Indexes only when justified:**
+- `queue` on QueueAssignment — supports the per-department queue view
+- `(request_id, created_at)` on FulfillmentComment — supports comment history retrieval
+- No index proposed on `assignedFulfillerId` yet — no documented query currently filters by "my personally assigned tickets" rather than "my department's queue"; add one if/when that view is built.

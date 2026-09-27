@@ -17,20 +17,46 @@ model RequestType {
 }
 
 model Request {
-  id              String       @id
-  requesterId     String
-  requestTypeId   String
-  description     String
-  formData        Json
-  status          String       @default("Submitted")
-  idempotencyKey  String?      @unique
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  requestType     RequestType  @relation(fields: [requestTypeId], references: [id])
-  attachments     Attachment[]
-  statusEvents    StatusEvent[]
+  id                  String              @id
+  requesterId         String
+  requestTypeId       String
+  description         String
+  formData            Json
+  status              String              @default("Submitted")
+  idempotencyKey      String?             @unique
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  requestType         RequestType         @relation(fields: [requestTypeId], references: [id])
+  attachments         Attachment[]
+  statusEvents        StatusEvent[]
+  queueAssignment     QueueAssignment?
+  fulfillmentComments FulfillmentComment[]
 
   @@index([requesterId])
+}
+
+model QueueAssignment {
+  id                  String   @id
+  requestId           String   @unique
+  queue               String
+  assignedFulfillerId String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  request             Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([queue])
+}
+
+model FulfillmentComment {
+  id         String   @id
+  requestId  String
+  authorId   String
+  body       String
+  visibility String   @default("internal")
+  createdAt  DateTime @default(now())
+  request    Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
 }
 
 model Attachment {

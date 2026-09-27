@@ -145,13 +145,47 @@ describe('AppController (e2e)', () => {
       .send({ decision: 'approve' })
       .expect(201);
 
+    // Approval hands the request straight to Fulfillment & Queue Management:
+    // by the time the decision call returns, the request has already moved
+    // past 'Approved' into 'In Progress' with a queue assignment created.
     const stored = await app.get(PrismaService).request.findUnique({
       where: { id: submission.body.request.id },
-      include: { statusEvents: true },
+      include: { statusEvents: true, queueAssignment: true },
     });
 
-    expect(stored?.status).toBe('Approved');
-    expect(stored?.statusEvents.at(-1)?.status).toBe('Approved');
+    expect(stored?.status).toBe('In Progress');
+    expect(stored?.statusEvents.map((event: { status: string }) => event.status)).toEqual([
+      'Submitted',
+      'Pending Approval',
+      'Approved',
+      'In Progress',
+    ]);
+    expect(stored?.queueAssignment?.queue).toBe('IT');
+
+    const fulfillmentQueue = await request(app.getHttpServer())
+      .get('/fulfillment/queue')
+      .set('x-actor-id', 'fulfiller-it-1')
+      .expect(200);
+    expect(
+      fulfillmentQueue.body.some(
+        (item: { requestId: string }) => item.requestId === submission.body.request.id,
+      ),
+    ).toBe(true);
+
+    await request(app.getHttpServer())
+      .post(`/fulfillment/${submission.body.request.id}/resolve`)
+      .set('x-actor-id', 'fulfiller-it-1')
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post(`/fulfillment/${submission.body.request.id}/close`)
+      .set('x-actor-id', 'fulfiller-it-1')
+      .expect(201);
+
+    const closed = await app.get(PrismaService).request.findUnique({
+      where: { id: submission.body.request.id },
+    });
+    expect(closed?.status).toBe('Closed');
   });
 
   afterEach(async () => {

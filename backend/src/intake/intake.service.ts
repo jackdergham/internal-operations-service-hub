@@ -101,6 +101,7 @@ export class IntakeService implements OnModuleInit {
           requesterId: existing.requesterId,
           requestTypeId: existing.requestTypeId,
           createdAt: existing.createdAt,
+          department: requestType.department,
         });
         const replayedRequest = await this.prisma.request.findUniqueOrThrow({
           where: { id: existing.id },
@@ -141,6 +142,7 @@ export class IntakeService implements OnModuleInit {
         requesterId: request.requesterId,
         requestTypeId: request.requestTypeId,
         createdAt: request.createdAt,
+        department: requestType.department,
       });
 
       const routedRequest = await this.prisma.request.findUniqueOrThrow({
