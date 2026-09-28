@@ -4,7 +4,6 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  OnModuleInit,
   Optional,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -19,68 +18,14 @@ import {
   RequestSummary,
 } from './intake.types.js';
 
-const requestTypes = [
-  {
-    id: 'new-laptop',
-    name: 'New laptop / equipment',
-    department: 'IT',
-    schema: {
-      required: [],
-      fields: [],
-    },
-    routingMode: 'approval',
-    destinationQueue: 'IT',
-    approvalChain: [{ type: 'manager' }],
-  },
-  {
-    id: 'pto-request',
-    name: 'PTO / annual leave',
-    department: 'HR',
-    schema: {
-      required: ['startDate', 'endDate'],
-      fields: [
-        { key: 'startDate', label: 'Start date', type: 'date' },
-        { key: 'endDate', label: 'End date', type: 'date' },
-      ],
-    },
-    routingMode: 'approval',
-    destinationQueue: 'HR',
-    approvalChain: [{ type: 'manager' }],
-  },
-  {
-    id: 'desk-relocation',
-    name: 'Desk relocation',
-    department: 'Operations',
-    schema: {
-      required: ['newLocation'],
-      fields: [
-        { key: 'newLocation', label: 'New location', type: 'text' },
-      ],
-    },
-    routingMode: 'direct',
-    destinationQueue: 'Operations',
-    approvalChain: [],
-  },
-];
-
 @Injectable()
-export class IntakeService implements OnModuleInit {
+export class IntakeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly directoryService: DirectoryService,
     @Optional() private readonly routingService?: RoutingService,
     @Optional() private readonly notificationsService?: NotificationsService,
   ) {}
-
-  async onModuleInit(): Promise<void> {
-    for (const requestType of requestTypes) {
-      await this.prisma.requestType.upsert({
-        where: { id: requestType.id },
-        update: requestType,
-        create: requestType,
-      });
-    }
-  }
 
   async createRequest(
     actorId: string | undefined,

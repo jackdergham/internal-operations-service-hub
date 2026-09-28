@@ -14,7 +14,6 @@ describe('IntakeService database integration', () => {
     await prisma.statusEvent.deleteMany();
     await prisma.attachment.deleteMany();
     await prisma.request.deleteMany();
-    await service.onModuleInit();
   });
 
   afterAll(async () => {
