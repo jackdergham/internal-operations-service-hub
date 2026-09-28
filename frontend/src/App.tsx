@@ -1,6 +1,7 @@
 import './App.css'
 import logo from './assets/logo.png'
 import { tabs } from './data'
+import { isRequestListTab, searchPlaceholder } from './search'
 import type { CommentMode, RoutingQueueItem, TabKey } from './types'
 import CatalogView from './views/CatalogView'
 import MyRequestsView from './views/MyRequestsView'
@@ -37,7 +38,7 @@ function initialsFor(name: string): string {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<TabKey>('catalog')
+  const [activeTab, setActiveTabState] = useState<TabKey>('catalog')
   const [searchTerm, setSearchTerm] = useState('')
   const [toastMessage, setToastMessage] = useState('')
   const [commentMode, setCommentMode] = useState<CommentMode>('reply')
@@ -66,6 +67,17 @@ function App() {
   const [myRequests, setMyRequests] = useState<RequestSummary[]>([])
   const [myRequestsLoading, setMyRequestsLoading] = useState(false)
   const shouldShowApprovals = currentUser?.roles.includes('approver') && !currentUser.roles.includes('fulfiller')
+
+  // A search term belongs to the list it was typed into, so changing tabs starts
+  // with a clean search. Otherwise a request submitted from the catalog could land
+  // on My Requests already hidden by a leftover filter.
+  const setActiveTab = (tab: TabKey) => {
+    if (tab === activeTab) return
+    setSearchTerm('')
+    setActiveTabState(tab)
+  }
+  const showSearch = isRequestListTab(activeTab)
+  const searchLabel = searchPlaceholder(activeTab, Boolean(shouldShowApprovals))
 
   useEffect(() => {
       listRequestTypes(apiBaseUrl)
@@ -165,8 +177,9 @@ function App() {
     showToast(`${item.requestId} marked ${decision === 'approve' ? 'approved' : 'rejected'}.`)
   }
 
-  const handleBulkApproveAll = async () => {
-    for (const item of queue) {
+  // Acts on the cards it is given (the ones on screen), never on hidden ones.
+  const handleBulkApproveAll = async (items: RoutingQueueItem[]) => {
+    for (const item of items) {
       await decide(item, 'approve')
     }
   }
@@ -217,15 +230,18 @@ function App() {
             <span className="brand-name">OpsHub</span>
           </div>
 
-          <div className="header-search">
-            <span className="material-symbols-outlined">search</span>
-            <input
-              type="text"
-              placeholder="Search requests, tickets, KB..."
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-          </div>
+          {showSearch && (
+            <div className="header-search">
+              <span className="material-symbols-outlined">search</span>
+              <input
+                type="text"
+                placeholder={searchLabel}
+                aria-label={searchLabel}
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </div>
+          )}
 
           <nav className="main-tabs" aria-label="Primary navigation">
             {tabs.map((tab) => (
@@ -295,13 +311,14 @@ function App() {
           </section>
 
           <section className={`tab-pane ${activeTab === 'myrequests' ? 'visible' : 'hidden'}`}>
-            <MyRequestsView requests={myRequests} loading={myRequestsLoading} />
+            <MyRequestsView requests={myRequests} searchTerm={searchTerm} loading={myRequestsLoading} />
           </section>
 
           <section className={`tab-pane ${activeTab === 'teamqueue' ? 'visible' : 'hidden'}`}>
             {shouldShowApprovals ? (
               <ApprovalsView
                 approvalCards={queue}
+                searchTerm={searchTerm}
                 handleBulkApproveAll={handleBulkApproveAll}
                 handleRejectOpen={handleRejectOpen}
                 handleApprove={(item) => { void decide(item, 'approve') }}
@@ -317,6 +334,7 @@ function App() {
                 notice={notice}
                 loading={fulfillmentLoading}
                 queue={fulfillmentQueue}
+                searchTerm={searchTerm}
                 onRefresh={refreshFulfillmentQueue}
                 onAssign={(requestId) => currentUser && void runFulfillmentAction(
                   () => assignFulfillmentRequest(apiBaseUrl, currentUser.employeeId, requestId),
@@ -341,6 +359,7 @@ function App() {
           <section className={`tab-pane ${activeTab === 'approvals' ? 'visible' : 'hidden'}`}>
             <ApprovalsView
               approvalCards={queue}
+              searchTerm={searchTerm}
               handleBulkApproveAll={handleBulkApproveAll}
               handleRejectOpen={handleRejectOpen}
               handleApprove={(item) => { void decide(item, 'approve') }}

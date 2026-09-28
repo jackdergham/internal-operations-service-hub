@@ -1,5 +1,6 @@
 import type { RequestSummary } from '../api/intakeApi'
 import { useState } from 'react'
+import { isSearching, matchesSearch } from '../search'
 
 const STAGES = ['Submitted', 'Pending Approval', 'Approved', 'In Progress', 'Resolved', 'Closed'] as const
 const STAGE_ICONS: Record<string, string> = {
@@ -40,10 +41,11 @@ function eventTimeFor(request: RequestSummary, stage: string): string | null {
 
 type Props = {
   requests: RequestSummary[]
+  searchTerm: string
   loading: boolean
 }
 
-export default function MyRequestsView({ requests, loading }: Props) {
+export default function MyRequestsView({ requests, searchTerm, loading }: Props) {
   const [trackedRequestId, setTrackedRequestId] = useState<string | null>(null)
 
   if (loading) {
@@ -70,7 +72,25 @@ export default function MyRequestsView({ requests, loading }: Props) {
     )
   }
 
-  const tracked = requests.find((request) => request.id === trackedRequestId) ?? requests[0]
+  const searching = isSearching(searchTerm)
+  const visible = requests.filter((request) =>
+    matchesSearch(searchTerm, [request.id, request.requestTypeName, request.department, request.description, request.status]))
+
+  if (visible.length === 0) {
+    return (
+      <div className="table-panel">
+        <div className="table-header">
+          <h3>Submissions History &amp; Status</h3>
+          <span>0 of {requests.length} Records Found</span>
+        </div>
+        <div className="request-table-scroll">
+          <p style={{ padding: '1.5rem' }}>No requests match “{searchTerm.trim()}”.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const tracked = visible.find((request) => request.id === trackedRequestId) ?? visible[0]
   const rejected = tracked.status === 'Rejected'
   const currentStageIndex = rejected
     ? STAGES.indexOf('Pending Approval')
@@ -126,7 +146,11 @@ export default function MyRequestsView({ requests, loading }: Props) {
       <div className="table-panel">
         <div className="table-header">
           <h3>Submissions History &amp; Status</h3>
-          <span>{requests.length} Record{requests.length === 1 ? '' : 's'} Found</span>
+          <span>
+            {searching
+              ? `${visible.length} of ${requests.length} Records Found`
+              : `${requests.length} Record${requests.length === 1 ? '' : 's'} Found`}
+          </span>
         </div>
 
         <div className="request-table-scroll">
@@ -142,7 +166,7 @@ export default function MyRequestsView({ requests, loading }: Props) {
               </tr>
             </thead>
             <tbody>
-              {requests.map((row) => {
+              {visible.map((row) => {
                 const tone = toneFor(row.status)
                 const lastEvent = row.statusEvents.at(-1)
 

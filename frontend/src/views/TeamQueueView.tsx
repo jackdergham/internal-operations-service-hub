@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { CommentMode } from '../types'
 import type { FulfillmentComment, FulfillmentQueueItem } from '../api/fulfillmentApi'
 import { listFulfillmentComments } from '../api/fulfillmentApi'
+import { isSearching, matchesSearch } from '../search'
 
 type Props = {
   commentMode: CommentMode
@@ -12,6 +13,7 @@ type Props = {
   notice: string
   loading: boolean
   queue: FulfillmentQueueItem[]
+  searchTerm: string
   onRefresh: () => void
   onAssign: (requestId: string) => void
   onResolve: (requestId: string) => void
@@ -28,6 +30,7 @@ export default function TeamQueueView({
   notice,
   loading,
   queue,
+  searchTerm,
   onRefresh,
   onAssign,
   onResolve,
@@ -37,8 +40,24 @@ export default function TeamQueueView({
   const [selectedRequestId, setSelectedRequestId] = useState(queue[0]?.requestId ?? '')
   const [comments, setComments] = useState<FulfillmentComment[]>([])
   const [commentBody, setCommentBody] = useState('')
-  const selected = queue.find((item) => item.requestId === selectedRequestId) ?? queue[0]
+  const searching = isSearching(searchTerm)
+  const visibleQueue = queue.filter((item) => matchesSearch(searchTerm, [
+    item.requestId,
+    item.requestTypeId,
+    item.requesterId,
+    item.queue,
+    item.status,
+    item.description,
+    item.assignedFulfillerId,
+  ]))
+  // The detail panel always shows a ticket that is in the visible list; if the
+  // search hides the chosen one it falls back to the first match (the choice
+  // itself is kept, so clearing the search brings it back).
+  const selected = visibleQueue.find((item) => item.requestId === selectedRequestId) ?? visibleQueue[0]
   const selectedRequestIdForComments = selected?.requestId ?? ''
+  // Only show comments that belong to the ticket in the detail panel. Searching can
+  // leave nothing selected, and switching tickets must not show the previous one's.
+  const selectedComments = comments.filter((comment) => comment.requestId === selectedRequestIdForComments)
 
   useEffect(() => {
     if (!selectedRequestIdForComments || !currentUserId) return
@@ -71,7 +90,7 @@ export default function TeamQueueView({
         <div className="queue-panel">
           <div className="table-header">
             <h3>Operational Queue</h3>
-            <span>{queue.length} open items</span>
+            <span>{searching ? `${visibleQueue.length} of ${queue.length} items` : `${queue.length} open items`}</span>
           </div>
           <table>
             <thead>
@@ -84,7 +103,7 @@ export default function TeamQueueView({
               </tr>
             </thead>
             <tbody>
-              {queue.map((row) => (
+              {visibleQueue.map((row) => (
                 <tr key={row.requestId} className="queue-row" onClick={() => setSelectedRequestId(row.requestId)}>
                   <td><strong>{row.requestTypeId}</strong><span className="ticket-id">{row.requestId}</span></td>
                   <td>{row.requesterId}</td>
@@ -126,8 +145,8 @@ export default function TeamQueueView({
 
           <div className="comment-panel">
             <strong>Request comments</strong>
-            {comments.length === 0 && <span className="comment-hint">No comments yet.</span>}
-            {comments.map((comment) => (
+            {selectedComments.length === 0 && <span className="comment-hint">No comments yet.</span>}
+            {selectedComments.map((comment) => (
               <div key={comment.id} className="field-copy">
                 <strong>{comment.authorId}</strong>
                 <span>{comment.body} · {new Date(comment.createdAt).toLocaleString()}</span>
@@ -154,7 +173,13 @@ export default function TeamQueueView({
             {selected?.status === 'Resolved' && <button type="button" className="primary-action small" onClick={() => selected && onClose(selected.requestId)}>Close</button>}
           </div>
 
-          {(queue.length === 0 || notice) && <div className="empty-state" role="status">{notice || 'No fulfillment items for this queue.'}</div>}
+          {(visibleQueue.length === 0 || notice) && (
+            <div className="empty-state" role="status">
+              {notice || (searching && queue.length > 0
+                ? `No requests match “${searchTerm.trim()}”.`
+                : 'No fulfillment items for this queue.')}
+            </div>
+          )}
         </aside>
       </div>
     </>

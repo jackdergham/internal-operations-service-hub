@@ -1,34 +1,46 @@
 import type { RoutingQueueItem } from '../types'
+import { isSearching, matchesSearch } from '../search'
 
 type Props = {
   approvalCards: RoutingQueueItem[]
-  handleBulkApproveAll: () => void
+  searchTerm: string
+  // Receives exactly the cards currently on screen, so "Batch Approve (N)"
+  // only ever acts on the N cards the user can see.
+  handleBulkApproveAll: (items: RoutingQueueItem[]) => void
   handleRejectOpen: (ticket: string) => void
   handleApprove: (item: RoutingQueueItem) => void
   loading: boolean
 }
 
-export default function ApprovalsView({ approvalCards, handleBulkApproveAll, handleRejectOpen, handleApprove, loading }: Props) {
+export default function ApprovalsView({ approvalCards, searchTerm, handleBulkApproveAll, handleRejectOpen, handleApprove, loading }: Props) {
+  const searching = isSearching(searchTerm)
+  const visibleCards = approvalCards.filter((card) =>
+    matchesSearch(searchTerm, [card.requestId, card.title, card.requester, card.category]))
+
   return (
     <>
       <div className="approval-banner">
         <div className="approval-banner-left">
           <span className="material-symbols-outlined">pending_actions</span>
           <div>
-            <strong>{approvalCards.length} approval decisions need your attention</strong>
+            <strong>
+              {searching
+                ? `Showing ${visibleCards.length} of ${approvalCards.length} approval decisions`
+                : `${approvalCards.length} approval decisions need your attention`}
+            </strong>
             <span>Live pending decisions from the routing service.</span>
           </div>
         </div>
-        <button type="button" className="primary-action" onClick={handleBulkApproveAll} disabled={loading || approvalCards.length === 0}>
-          Batch Approve ({approvalCards.length})
+        <button type="button" className="primary-action" onClick={() => handleBulkApproveAll(visibleCards)} disabled={loading || visibleCards.length === 0}>
+          Batch Approve ({visibleCards.length})
         </button>
       </div>
 
       <div className="approval-grid">
         {loading ? (
           <div className="empty-state">Loading approvals from the routing service...</div>
-        ) : approvalCards.length > 0 ? (
-          approvalCards.map((card) => (
+        ) : visibleCards.length > 0 ? (
+          visibleCards.map((card) => (
             <div key={card.id} className="approval-card" id={card.id}>
               <div className="approval-card-head">
                 <div>
@@ -53,6 +65,8 @@ export default function ApprovalsView({ approvalCards, handleBulkApproveAll, han
               </div>
             </div>
           ))
+        ) : searching && approvalCards.length > 0 ? (
+          <div className="empty-state">No approvals match “{searchTerm.trim()}”.</div>
         ) : (
           <div className="empty-state">All approval items have been cleared.</div>
         )}
