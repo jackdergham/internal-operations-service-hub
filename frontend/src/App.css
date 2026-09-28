@@ -117,6 +117,94 @@ button {
   gap: 12px;
 }
 
+.notification-anchor {
+  position: relative;
+}
+
+.notification-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 50;
+  width: min(380px, calc(100vw - 32px));
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-card);
+  box-shadow: 0 16px 40px rgba(32, 41, 59, 0.16);
+}
+
+.notification-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.notification-panel-header span,
+.notification-empty,
+.notification-copy small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.notification-empty {
+  margin: 0;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.notification-list {
+  max-height: min(480px, 65vh);
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.notification-item:hover,
+.notification-item.unread {
+  background: var(--surface-soft);
+}
+
+.notification-icon {
+  margin-top: 2px;
+  color: var(--primary);
+}
+
+.notification-copy {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+}
+
+.notification-copy span {
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.notification-unread-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
 .acting-user-picker {
   gap: 8px;
   color: var(--text-soft);

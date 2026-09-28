@@ -23,6 +23,8 @@ import {
 import type { FulfillmentQueueItem } from './api/fulfillmentApi'
 import { listActors } from './api/directoryApi'
 import type { Actor } from './api/directoryApi'
+import { listNotifications, markNotificationRead } from './api/notificationsApi'
+import type { NotificationItem } from './api/notificationsApi'
 import { useEffect, useState } from 'react'
 import './index.css'
 
@@ -66,6 +68,8 @@ function App() {
   const [fulfillmentLoading, setFulfillmentLoading] = useState(false)
   const [myRequests, setMyRequests] = useState<RequestSummary[]>([])
   const [myRequestsLoading, setMyRequestsLoading] = useState(false)
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const shouldShowApprovals = currentUser?.roles.includes('approver') && !currentUser.roles.includes('fulfiller')
 
   // A search term belongs to the list it was typed into, so changing tabs starts
@@ -140,6 +144,26 @@ function App() {
       })
       .finally(() => setMyRequestsLoading(false))
   }, [activeTab, currentUser])
+
+  useEffect(() => {
+    if (!currentUser) return
+    listNotifications(apiBaseUrl, currentUser.employeeId)
+      .then(setNotifications)
+      .catch(() => setNotice('Could not load notifications. Start the NestJS server and try again.'))
+  }, [currentUser])
+
+  const unreadNotifications = notifications.filter((notification) => !notification.readAt)
+  const handleNotificationClick = async (notification: NotificationItem) => {
+    if (!currentUser || notification.readAt) return
+    try {
+      await markNotificationRead(apiBaseUrl, currentUser.employeeId, notification.id)
+      setNotifications((current) => current.map((candidate) => candidate.id === notification.id
+        ? { ...candidate, readAt: new Date().toISOString() }
+        : candidate))
+    } catch {
+      setNotice('Could not mark the notification as read.')
+    }
+  }
 
   const refreshFulfillmentQueue = () => {
     if (!currentUser) return
@@ -263,10 +287,58 @@ function App() {
         </div>
 
         <div className="topbar-right">
-          <button type="button" className="icon-button neutral" aria-label="Notifications">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="alert-dot">2</span>
-          </button>
+          <div className="notification-anchor">
+            <button
+              type="button"
+              className="icon-button neutral"
+              aria-label={`Notifications${unreadNotifications.length ? `, ${unreadNotifications.length} unread` : ''}`}
+              aria-expanded={notificationsOpen}
+              onClick={() => {
+                const opening = !notificationsOpen
+                setNotificationsOpen(opening)
+                if (opening && currentUser) {
+                  listNotifications(apiBaseUrl, currentUser.employeeId)
+                    .then(setNotifications)
+                    .catch(() => setNotice('Could not refresh notifications.'))
+                }
+              }}
+            >
+              <span className="material-symbols-outlined">notifications</span>
+              {unreadNotifications.length > 0 && <span className="alert-dot">{unreadNotifications.length}</span>}
+            </button>
+            {notificationsOpen && (
+              <div className="notification-panel" role="dialog" aria-label="Notifications">
+                <div className="notification-panel-header">
+                  <strong>Notifications</strong>
+                  <span>{unreadNotifications.length} unread</span>
+                </div>
+                {notifications.length === 0 ? (
+                  <p className="notification-empty">You are all caught up.</p>
+                ) : (
+                  <div className="notification-list">
+                    {notifications.map((notification) => (
+                      <button
+                        type="button"
+                        className={`notification-item ${notification.readAt ? '' : 'unread'}`}
+                        key={notification.id}
+                        onClick={() => void handleNotificationClick(notification)}
+                      >
+                        <span className="notification-icon material-symbols-outlined">
+                          {notification.type.includes('approval') ? 'task_alt' : 'notifications'}
+                        </span>
+                        <span className="notification-copy">
+                          <strong>{notification.title}</strong>
+                          <span>{notification.message}</span>
+                          <small>{new Date(notification.createdAt).toLocaleString()}</small>
+                        </span>
+                        {!notification.readAt && <span className="notification-unread-dot" aria-label="Unread" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <button type="button" className="icon-button neutral hidden-mobile" aria-label="Help">
             <span className="material-symbols-outlined">help</span>
           </button>

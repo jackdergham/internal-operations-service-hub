@@ -7,9 +7,10 @@ import { LocalRequestAssistProvider } from './assistance/local-request-assist.pr
 import { RequestAssistService } from './assistance/request-assist.service.js';
 import { GeminiRequestAssistProvider } from './assistance/gemini-request-assist.provider.js';
 import { REQUEST_ASSIST_PROVIDER } from './assistance/request-assist.service.js';
+import { NotificationsModule } from '../notifications/notifications.module.js';
 
 @Module({
-  imports: [RoutingModule, DirectoryModule],
+  imports: [RoutingModule, DirectoryModule, NotificationsModule],
   controllers: [IntakeController],
   providers: [
     IntakeService,

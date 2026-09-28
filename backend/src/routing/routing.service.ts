@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
 import { DirectoryService } from '../directory/directory.service.js';
 import { FulfillmentService } from '../fulfillment/fulfillment.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { DecideApprovalInput, RoutingDecision, RoutingQueueItem } from './routing.types.js';
 
 const DEFAULT_QUEUE = 'General';
@@ -29,6 +30,7 @@ export class RoutingService implements OnModuleInit {
     @Optional() private readonly prisma?: PrismaService,
     @Optional() private readonly directoryService?: DirectoryService,
     @Optional() private readonly fulfillmentService?: FulfillmentService,
+    @Optional() private readonly notificationsService?: NotificationsService,
   ) {
     this.addSeedDecision();
   }
@@ -78,6 +80,21 @@ export class RoutingService implements OnModuleInit {
         data: { id: randomUUID(), requestId: request.id, status: 'Pending Approval', source: 'routing' },
       }),
     ]);
+
+    await this.notificationsService?.create({
+      recipientId: request.requesterId,
+      type: 'approval-requested',
+      title: 'Approval requested',
+      message: `${request.id} is waiting for approval.`,
+      requestId: request.id,
+    });
+    await this.notificationsService?.create({
+      recipientId: this.resolveApprover(request.requesterId),
+      type: 'approval-requested',
+      title: 'Approval needed',
+      message: `You have an approval request for ${request.id}.`,
+      requestId: request.id,
+    });
   }
 
   listQueue(approverId: string): RoutingQueueItem[] {
@@ -131,6 +148,14 @@ export class RoutingService implements OnModuleInit {
           data: { id: randomUUID(), requestId: routingDecision.requestId, status: requestStatus, source: 'routing' },
         }),
       ]);
+
+      await this.notificationsService?.create({
+        recipientId: routingDecision.requesterId ?? 'unknown',
+        type: requestStatus === 'Approved' ? 'request-approved' : 'request-rejected',
+        title: `Request ${requestStatus.toLowerCase()}`,
+        message: `${routingDecision.requestId} was ${requestStatus.toLowerCase()}.`,
+        requestId: routingDecision.requestId,
+      });
 
       if (input.decision === 'approve') {
         await this.fulfillmentService?.registerReadyForQueue({

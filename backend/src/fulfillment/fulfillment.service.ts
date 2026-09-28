@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import type { Actor } from '../directory/directory.types.js';
 import type {
   AddCommentInput,
@@ -19,7 +20,10 @@ const ACTIONABLE_ROLES = ['fulfiller', 'admin'] as const;
 
 @Injectable()
 export class FulfillmentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService?: NotificationsService,
+  ) {}
 
   async registerReadyForQueue(request: { id: string; queue: string }): Promise<void> {
     const existing = await this.prisma.queueAssignment.findUnique({
@@ -41,6 +45,17 @@ export class FulfillmentService {
         },
       }),
     ]);
+
+    const requestRecord = await this.prisma.request.findUnique({ where: { id: request.id } });
+    if (requestRecord) {
+      await this.notificationsService?.create({
+        recipientId: requestRecord.requesterId,
+        type: 'request-in-progress',
+        title: 'Request in progress',
+        message: `${request.id} is now being worked on by ${request.queue}.`,
+        requestId: request.id,
+      });
+    }
   }
 
   async listQueue(actor: Actor): Promise<QueueItem[]> {
@@ -71,6 +86,13 @@ export class FulfillmentService {
       where: { id: assignment.id },
       data: { assignedFulfillerId: actor.employeeId },
     });
+    await this.notificationsService?.create({
+      recipientId: actor.employeeId,
+      type: 'assignment-created',
+      title: 'Request assigned',
+      message: `${requestId} is now assigned to you.`,
+      requestId,
+    });
   }
 
   async reassign(requestId: string, actor: Actor, newQueue: string): Promise<void> {
@@ -93,7 +115,7 @@ export class FulfillmentService {
     if (!input?.body || input.body.trim().length === 0) {
       throw new BadRequestException('body is required');
     }
-    await this.mustFindAssignment(requestId);
+    const assignment = await this.mustFindAssignment(requestId);
 
     await this.prisma.fulfillmentComment.create({
       data: {
@@ -104,6 +126,18 @@ export class FulfillmentService {
         visibility: input.visibility ?? 'internal',
       },
     });
+    if (input.visibility === 'requester-visible') {
+      const request = await this.prisma.request.findUnique({ where: { id: assignment.requestId } });
+      if (request) {
+        await this.notificationsService?.create({
+          recipientId: request.requesterId,
+          type: 'comment-added',
+          title: 'New request comment',
+          message: `There is a new update on ${requestId}.`,
+          requestId,
+        });
+      }
+    }
   }
 
   async listComments(requestId: string, actor: Actor): Promise<FulfillmentComment[]> {

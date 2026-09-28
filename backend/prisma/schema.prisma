@@ -80,3 +80,16 @@ model StatusEvent {
   @@index([requestId, createdAt])
 }
 
+model Notification {
+  id          String    @id
+  recipientId String
+  type        String
+  title       String
+  message     String
+  requestId   String?
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([recipientId, readAt, createdAt])
+}
+

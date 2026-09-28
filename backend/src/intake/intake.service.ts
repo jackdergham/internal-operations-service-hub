@@ -12,6 +12,7 @@ import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
 import { DirectoryService } from '../directory/directory.service.js';
 import { RoutingService } from '../routing/routing.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import {
   CreateRequestInput,
   CreateRequestResponse,
@@ -59,6 +60,7 @@ export class IntakeService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly directoryService: DirectoryService,
     @Optional() private readonly routingService?: RoutingService,
+    @Optional() private readonly notificationsService?: NotificationsService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -149,6 +151,14 @@ export class IntakeService implements OnModuleInit {
       const routedRequest = await this.prisma.request.findUniqueOrThrow({
         where: { id: request.id },
         include: { attachments: true, statusEvents: true },
+      });
+
+      await this.notificationsService?.create({
+        recipientId: request.requesterId,
+        type: 'request-submitted',
+        title: 'Request submitted',
+        message: `${request.id} was submitted successfully.`,
+        requestId: request.id,
       });
 
       return { request: this.toResponse(routedRequest), replayed: false };
