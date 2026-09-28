@@ -50,13 +50,8 @@ export default function TeamQueueView({
     item.description,
     item.assignedFulfillerId,
   ]))
-  // The detail panel always shows a ticket that is in the visible list; if the
-  // search hides the chosen one it falls back to the first match (the choice
-  // itself is kept, so clearing the search brings it back).
   const selected = visibleQueue.find((item) => item.requestId === selectedRequestId) ?? visibleQueue[0]
   const selectedRequestIdForComments = selected?.requestId ?? ''
-  // Only show comments that belong to the ticket in the detail panel. Searching can
-  // leave nothing selected, and switching tickets must not show the previous one's.
   const selectedComments = comments.filter((comment) => comment.requestId === selectedRequestIdForComments)
 
   useEffect(() => {

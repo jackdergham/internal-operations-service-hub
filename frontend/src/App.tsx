@@ -25,7 +25,7 @@ import { listActors } from './api/directoryApi'
 import type { Actor } from './api/directoryApi'
 import { listNotifications, markNotificationRead } from './api/notificationsApi'
 import type { NotificationItem } from './api/notificationsApi'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import './index.css'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
@@ -51,13 +51,13 @@ function App() {
   const [intakeFormOpen, setIntakeFormOpen] = useState(false)
   const [requestTypes, setRequestTypes] = useState<RequestType[]>([])
 
-  const showToast = (message: string) => {
+  const showToast = useCallback((message: string) => {
     setToastMessage(message)
     window.clearTimeout((window as typeof window & { __opsToast?: number }).__opsToast)
     ;(window as typeof window & { __opsToast?: number }).__opsToast = window.setTimeout(() => {
       setToastMessage('')
     }, 2800)
-  }
+  }, [])
   
   const [queue, setQueue] = useState<RoutingQueueItem[]>([])
   const [queueLoading, setQueueLoading] = useState(false)
@@ -72,9 +72,6 @@ function App() {
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const shouldShowApprovals = currentUser?.roles.includes('approver') && !currentUser.roles.includes('fulfiller')
 
-  // A search term belongs to the list it was typed into, so changing tabs starts
-  // with a clean search. Otherwise a request submitted from the catalog could land
-  // on My Requests already hidden by a leftover filter.
   const setActiveTab = (tab: TabKey) => {
     if (tab === activeTab) return
     setSearchTerm('')
@@ -210,7 +207,6 @@ function App() {
     showToast(`${item.requestId} marked ${decision === 'approve' ? 'approved' : 'rejected'}.`)
   }
 
-  // Acts on the cards it is given (the ones on screen), never on hidden ones.
   const handleBulkApproveAll = async (items: RoutingQueueItem[]) => {
     for (const item of items) {
       await decide(item, 'approve')
@@ -455,7 +451,7 @@ function App() {
           </section>
 
           <section className={`tab-pane ${activeTab === 'config' ? 'visible' : 'hidden'}`}>
-            <ConfigView showToast={showToast} />
+            <ConfigView apiBaseUrl={apiBaseUrl} currentUser={currentUser} showToast={showToast} />
           </section>
         </div>
       </main>

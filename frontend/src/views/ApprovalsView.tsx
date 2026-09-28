@@ -4,8 +4,6 @@ import { isSearching, matchesSearch } from '../search'
 type Props = {
   approvalCards: RoutingQueueItem[]
   searchTerm: string
-  // Receives exactly the cards currently on screen, so "Batch Approve (N)"
-  // only ever acts on the N cards the user can see.
   handleBulkApproveAll: (items: RoutingQueueItem[]) => void
   handleRejectOpen: (ticket: string) => void
   handleApprove: (item: RoutingQueueItem) => void

@@ -8,12 +8,38 @@ datasource db {
 }
 
 model RequestType {
-  id          String    @id
-  name        String
-  department  String
-  schema      Json
-  requests    Request[]
-  createdAt   DateTime  @default(now())
+  id                  String                @id
+  name                String
+  department          String
+  schema              Json
+  routingMode         String                @default("approval")
+  destinationQueue    String                @default("General")
+  approvalChain       Json                  @default("[]")
+  currentVersion      Int                   @default(1)
+  requests            Request[]
+  workflowVersions    RequestTypeVersion[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  @@index([department])
+}
+
+model RequestTypeVersion {
+  id               String     @id
+  requestTypeId    String
+  version          Int
+  name             String
+  department       String
+  schema           Json
+  routingMode      String
+  destinationQueue String
+  approvalChain    Json
+  publishedBy      String
+  publishedAt      DateTime   @default(now())
+  requestType      RequestType @relation(fields: [requestTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([requestTypeId, version])
+  @@index([requestTypeId, publishedAt])
 }
 
 model Request {

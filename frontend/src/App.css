@@ -1476,6 +1476,7 @@ td {
   justify-content: space-between;
   gap: 14px;
   align-items: center;
+  padding: 12px 14px;
 }
 
 .report-kpis {
@@ -1827,3 +1828,14 @@ td {
     width: 100%;
   }
 }
+
+.field-row.selected { outline: 2px solid rgba(50, 100, 180, 0.2); }
+.field-row input, .field-row select, .config-form input { min-width: 0; }
+.config-form { display: grid; gap: 12px; padding: 14px 0; }
+.config-form label { display: grid; gap: 6px; font-size: 12px; font-weight: 700; }
+.config-form input { padding: 9px 10px; border: 1px solid #d8dde5; border-radius: 8px; }
+.config-save-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; }
+.config-save-row span, .version-list span { font-size: 12px; color: #6b7280; }
+.version-list { display: grid; gap: 8px; }
+.version-list > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #edf0f3; }
+.empty-state { padding: 48px; display: grid; gap: 8px; text-align: center; }

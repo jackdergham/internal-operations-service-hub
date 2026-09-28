@@ -13,6 +13,7 @@ import { DirectoryService } from '../directory/directory.service.js';
 import { FulfillmentService } from '../fulfillment/fulfillment.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { DecideApprovalInput, RoutingDecision, RoutingQueueItem } from './routing.types.js';
+import type { ApprovalStepConfig, RoutingMode } from '../config/config.types.js';
 
 const DEFAULT_QUEUE = 'General';
 
@@ -45,7 +46,7 @@ export class RoutingService implements OnModuleInit {
     });
 
     for (const request of pendingRequests) {
-      this.addRequestDecision(
+      await this.addRequestDecision(
         request.id,
         request.requesterId,
         request.requestTypeId,
@@ -64,7 +65,7 @@ export class RoutingService implements OnModuleInit {
   }): Promise<void> {
     if (this.decisions.has(`decision-${request.id}`)) return;
 
-    this.addRequestDecision(
+    const decision = await this.addRequestDecision(
       request.id,
       request.requesterId,
       request.requestTypeId,
@@ -74,6 +75,11 @@ export class RoutingService implements OnModuleInit {
 
     if (!this.prisma) return;
 
+    if (decision.status === 'ReadyForQueue') {
+      await this.fulfillmentService?.registerReadyForQueue({ id: request.id, queue: decision.destinationQueue });
+      return;
+    }
+
     await this.prisma.$transaction([
       this.prisma.request.update({ where: { id: request.id }, data: { status: 'Pending Approval' } }),
       this.prisma.statusEvent.create({
@@ -81,6 +87,7 @@ export class RoutingService implements OnModuleInit {
       }),
     ]);
 
+    const firstStep = decision.approvalSteps[0];
     await this.notificationsService?.create({
       recipientId: request.requesterId,
       type: 'approval-requested',
@@ -88,13 +95,15 @@ export class RoutingService implements OnModuleInit {
       message: `${request.id} is waiting for approval.`,
       requestId: request.id,
     });
-    await this.notificationsService?.create({
-      recipientId: this.resolveApprover(request.requesterId),
-      type: 'approval-requested',
-      title: 'Approval needed',
-      message: `You have an approval request for ${request.id}.`,
-      requestId: request.id,
-    });
+    if (firstStep) {
+      await this.notificationsService?.create({
+        recipientId: firstStep.approverId,
+        type: 'approval-requested',
+        title: 'Approval needed',
+        message: `You have an approval request for ${request.id}.`,
+        requestId: request.id,
+      });
+    }
   }
 
   listQueue(approverId: string): RoutingQueueItem[] {
@@ -125,7 +134,8 @@ export class RoutingService implements OnModuleInit {
     const routingDecision = this.decisions.get(decisionId);
     if (!routingDecision) throw new NotFoundException('Routing decision not found');
 
-    const step = routingDecision.approvalSteps.find(({ id }) => id === stepId);
+    const step = routingDecision.approvalSteps.find(({ id }) => id === stepId)
+      ?? (stepId === `step-${routingDecision.requestId}` ? routingDecision.approvalSteps[0] : undefined);
     if (!step) throw new NotFoundException('Approval step not found');
 
     this.validateInput(input);
@@ -137,27 +147,60 @@ export class RoutingService implements OnModuleInit {
     step.status = input.decision === 'approve' ? 'Approved' : 'Rejected';
     step.decidedBy = input.approverId;
     step.decidedAt = new Date().toISOString();
-    routingDecision.status = input.decision === 'approve' ? 'ReadyForQueue' : 'Rejected';
     if (input.decision === 'reject') step.rejectionReason = input.reason;
 
+    if (input.decision === 'approve') {
+      const nextStep = routingDecision.approvalSteps.find((candidate) => candidate.stepNumber === step.stepNumber + 1);
+      if (nextStep) {
+        routingDecision.status = 'AwaitingApproval';
+        if (this.prisma && routingDecision.requestId !== 'request-1') {
+          await this.prisma.statusEvent.create({
+            data: { id: randomUUID(), requestId: routingDecision.requestId, status: 'Pending Approval', source: 'routing' },
+          });
+        }
+        await this.notificationsService?.create({
+          recipientId: nextStep.approverId,
+          type: 'approval-requested',
+          title: 'Approval needed',
+          message: `You have the next approval step for ${routingDecision.requestId}.`,
+          requestId: routingDecision.requestId,
+        });
+      } else {
+        routingDecision.status = 'ReadyForQueue';
+      }
+    } else {
+      routingDecision.status = 'Rejected';
+    }
+
     if (this.prisma && routingDecision.requestId !== 'request-1') {
-      const requestStatus = input.decision === 'approve' ? 'Approved' : 'Rejected';
-      await this.prisma.$transaction([
-        this.prisma.request.update({ where: { id: routingDecision.requestId }, data: { status: requestStatus } }),
-        this.prisma.statusEvent.create({
-          data: { id: randomUUID(), requestId: routingDecision.requestId, status: requestStatus, source: 'routing' },
-        }),
-      ]);
-
-      await this.notificationsService?.create({
-        recipientId: routingDecision.requesterId ?? 'unknown',
-        type: requestStatus === 'Approved' ? 'request-approved' : 'request-rejected',
-        title: `Request ${requestStatus.toLowerCase()}`,
-        message: `${routingDecision.requestId} was ${requestStatus.toLowerCase()}.`,
-        requestId: routingDecision.requestId,
-      });
-
-      if (input.decision === 'approve') {
+      if (input.decision === 'reject') {
+        await this.prisma.$transaction([
+          this.prisma.request.update({ where: { id: routingDecision.requestId }, data: { status: 'Rejected' } }),
+          this.prisma.statusEvent.create({
+            data: { id: randomUUID(), requestId: routingDecision.requestId, status: 'Rejected', source: 'routing' },
+          }),
+        ]);
+        await this.notificationsService?.create({
+          recipientId: routingDecision.requesterId ?? 'unknown',
+          type: 'request-rejected',
+          title: 'Request rejected',
+          message: `${routingDecision.requestId} was rejected.`,
+          requestId: routingDecision.requestId,
+        });
+      } else if (routingDecision.status === 'ReadyForQueue') {
+        await this.prisma.$transaction([
+          this.prisma.request.update({ where: { id: routingDecision.requestId }, data: { status: 'Approved' } }),
+          this.prisma.statusEvent.create({
+            data: { id: randomUUID(), requestId: routingDecision.requestId, status: 'Approved', source: 'routing' },
+          }),
+        ]);
+        await this.notificationsService?.create({
+          recipientId: routingDecision.requesterId ?? 'unknown',
+          type: 'request-approved',
+          title: 'Request approved',
+          message: `${routingDecision.requestId} was approved.`,
+          requestId: routingDecision.requestId,
+        });
         await this.fulfillmentService?.registerReadyForQueue({
           id: routingDecision.requestId,
           queue: routingDecision.destinationQueue,
@@ -176,29 +219,51 @@ export class RoutingService implements OnModuleInit {
     });
   }
 
-  private addRequestDecision(
+  private async addRequestDecision(
     id: string,
     requesterId: string,
     requestTypeId: string,
     submittedAt: Date,
     department?: string,
-  ): void {
+  ): Promise<RoutingDecision> {
     const decisionId = `decision-${id}`;
-    if (this.decisions.has(decisionId)) return;
+    const existing = this.decisions.get(decisionId);
+    if (existing) return existing;
 
-    this.decisions.set(decisionId, {
-      id: decisionId, requestId: id, requesterId, requestTypeId, status: 'AwaitingApproval',
-      destinationQueue: department ?? DEFAULT_QUEUE, submittedAt: submittedAt.toISOString(),
-      approvalSteps: [{ id: `step-${id}`, stepNumber: 1, approverId: this.resolveApprover(requesterId), status: 'Pending' }],
-    });
+    const config = this.prisma
+      ? await this.prisma.requestType.findUnique({ where: { id: requestTypeId } })
+      : null;
+    const routingMode = (config?.routingMode ?? 'approval') as RoutingMode;
+    const destinationQueue = config?.destinationQueue ?? department ?? DEFAULT_QUEUE;
+    const approvalChain = Array.isArray(config?.approvalChain) ? config.approvalChain as unknown as ApprovalStepConfig[] : [{ type: 'manager' as const }];
+    const approvalSteps = routingMode === 'direct'
+      ? []
+      : approvalChain.map((step, index) => ({
+          id: `step-${id}-${index + 1}`,
+          stepNumber: index + 1,
+          approverId: this.resolveConfiguredApprover(requesterId, step),
+          status: 'Pending' as const,
+        }));
+
+    const decision: RoutingDecision = {
+      id: decisionId,
+      requestId: id,
+      requesterId,
+      requestTypeId,
+      status: routingMode === 'direct' ? 'ReadyForQueue' : 'AwaitingApproval',
+      destinationQueue,
+      submittedAt: submittedAt.toISOString(),
+      approvalSteps,
+    };
+    this.decisions.set(decisionId, decision);
+    return decision;
   }
 
-  private resolveApprover(requesterId: string): string {
-    return (
-      this.directoryService?.getManagerId(requesterId) ??
-      managerByRequester[requesterId] ??
-      DEFAULT_APPROVER
-    );
+  private resolveConfiguredApprover(requesterId: string, step: ApprovalStepConfig): string {
+    if (step.type === 'specific-user') return step.actorId ?? DEFAULT_APPROVER;
+    const managerId = this.directoryService?.getManagerId(requesterId) ?? managerByRequester[requesterId] ?? DEFAULT_APPROVER;
+    if (step.type === 'manager') return managerId;
+    return this.directoryService?.getManagerId(managerId) ?? DEFAULT_APPROVER;
   }
 
   private validateInput(input: DecideApprovalInput): void {

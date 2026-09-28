@@ -117,11 +117,11 @@ describe('AppController (e2e)', () => {
     expect(listed).toMatchObject({
       requestTypeName: 'Desk relocation',
       department: 'Operations',
-      status: 'Pending Approval',
+      status: 'In Progress',
     });
     expect(listed.statusEvents.map((event: { status: string }) => event.status)).toEqual([
       'Submitted',
-      'Pending Approval',
+      'In Progress',
     ]);
 
     const someoneElse = await request(app.getHttpServer())

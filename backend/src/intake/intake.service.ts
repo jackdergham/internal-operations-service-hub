@@ -28,6 +28,9 @@ const requestTypes = [
       required: [],
       fields: [],
     },
+    routingMode: 'approval',
+    destinationQueue: 'IT',
+    approvalChain: [{ type: 'manager' }],
   },
   {
     id: 'pto-request',
@@ -40,6 +43,9 @@ const requestTypes = [
         { key: 'endDate', label: 'End date', type: 'date' },
       ],
     },
+    routingMode: 'approval',
+    destinationQueue: 'HR',
+    approvalChain: [{ type: 'manager' }],
   },
   {
     id: 'desk-relocation',
@@ -51,6 +57,9 @@ const requestTypes = [
         { key: 'newLocation', label: 'New location', type: 'text' },
       ],
     },
+    routingMode: 'direct',
+    destinationQueue: 'Operations',
+    approvalChain: [],
   },
 ];
 
