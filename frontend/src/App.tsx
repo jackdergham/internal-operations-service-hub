@@ -99,7 +99,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if ((activeTab !== 'teamqueue' && activeTab !== 'approvals') || !shouldShowApprovals) return
+    if (!shouldShowApprovals) return
     if (!currentUser) return
 
     listApprovalQueue(apiBaseUrl, currentUser.employeeId)
@@ -118,19 +118,23 @@ function App() {
         setQueue([])
         setNotice('Could not load routing data. Start the NestJS server and try again.')
       })
-      .finally(() => setQueueLoading(false))
+      .finally(() => {
+        if (activeTab === 'teamqueue' || activeTab === 'approvals') setQueueLoading(false)
+      })
   }, [activeTab, currentUser, shouldShowApprovals])
 
   useEffect(() => {
-    if (activeTab !== 'teamqueue' || !currentUser || shouldShowApprovals) return
-    setFulfillmentLoading(true)
+    if (!currentUser || shouldShowApprovals || !currentUser.roles.some((role) => role === 'fulfiller' || role === 'admin')) return
+    if (activeTab === 'teamqueue') setFulfillmentLoading(true)
     listFulfillmentQueue(apiBaseUrl, currentUser.employeeId)
       .then(setFulfillmentQueue)
       .catch(() => {
         setFulfillmentQueue([])
         setNotice('Could not load fulfillment data. Start the NestJS server and try again.')
       })
-      .finally(() => setFulfillmentLoading(false))
+      .finally(() => {
+        if (activeTab === 'teamqueue') setFulfillmentLoading(false)
+      })
   }, [activeTab, currentUser, shouldShowApprovals])
 
   useEffect(() => {
@@ -153,6 +157,11 @@ function App() {
   }, [currentUser])
 
   const unreadNotifications = notifications.filter((notification) => !notification.readAt)
+  const relevantQueueCount = shouldShowApprovals
+    ? queue.length
+    : currentUser?.roles.some((role) => role === 'fulfiller' || role === 'admin')
+      ? fulfillmentQueue.length
+      : 0
   const handleNotificationClick = async (notification: NotificationItem) => {
     if (!currentUser || notification.readAt) return
     try {
@@ -280,7 +289,9 @@ function App() {
                 {tab.key === 'myrequests' && myRequests.length > 0 && (
                   <span className="tab-count">{myRequests.length}</span>
                 )}
-                {tab.key === 'teamqueue' && <span className="tab-count alert">3</span>}
+                {tab.key === 'teamqueue' && relevantQueueCount > 0 && (
+                  <span className="tab-count alert">{relevantQueueCount}</span>
+                )}
               </button>
             ))}
           </nav>
