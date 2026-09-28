@@ -1,8 +1,6 @@
 import type { RequestSummary } from '../api/intakeApi'
+import { useState } from 'react'
 
-// Canonical lifecycle from data-model.md's Request Intake & Lifecycle section:
-// Submitted -> Pending Approval -> Approved -> In Progress -> Resolved -> Closed
-// (Pending Approval -> Rejected is a terminal branch off that line, not a step on it.)
 const STAGES = ['Submitted', 'Pending Approval', 'Approved', 'In Progress', 'Resolved', 'Closed'] as const
 const STAGE_ICONS: Record<string, string> = {
   Submitted: 'task_alt',
@@ -46,6 +44,8 @@ type Props = {
 }
 
 export default function MyRequestsView({ requests, loading }: Props) {
+  const [trackedRequestId, setTrackedRequestId] = useState<string | null>(null)
+
   if (loading) {
     return (
       <div className="table-panel">
@@ -70,9 +70,7 @@ export default function MyRequestsView({ requests, loading }: Props) {
     )
   }
 
-  // The tracker panel visualizes one request's progress in detail; the most
-  // recently submitted one is the most likely to be worth watching closely.
-  const tracked = requests[0]
+  const tracked = requests.find((request) => request.id === trackedRequestId) ?? requests[0]
   const rejected = tracked.status === 'Rejected'
   const currentStageIndex = rejected
     ? STAGES.indexOf('Pending Approval')
@@ -105,8 +103,8 @@ export default function MyRequestsView({ requests, loading }: Props) {
                 key={stage}
                 className={`step-item ${isComplete ? 'complete' : ''} ${isActive ? 'current' : ''} ${isFuture ? 'light' : ''}`}
               >
-                <div className={`step-bullet ${isComplete ? 'complete' : ''} ${isActive ? 'active' : ''}`}>
-                  <span className="material-symbols-outlined">{STAGE_ICONS[stage]}</span>
+                <div className={`step-bullet ${isComplete ? 'complete' : ''} ${isActive ? 'active' : ''} ${isActive && !rejected && ['Pending Approval', 'In Progress'].includes(stage) ? 'loading' : ''}`}>
+                  <span className="material-symbols-outlined">{isComplete ? 'check' : STAGE_ICONS[stage]}</span>
                 </div>
                 <strong>{stage}</strong>
                 <span>{time ?? (isFuture ? 'Not yet reached' : 'Pending')}</span>
@@ -168,9 +166,14 @@ export default function MyRequestsView({ requests, loading }: Props) {
                       {lastEvent ? formatDate(lastEvent.createdAt) : '—'}
                     </td>
                     <td className="request-action-cell">
-                      <span className="request-action">
+                      <button
+                        type="button"
+                        className="request-action"
+                        onClick={() => setTrackedRequestId(row.id)}
+                        aria-label={`${row.status === 'Closed' || row.status === 'Rejected' ? 'View trail for' : 'Track status for'} request ${row.id}`}
+                      >
                         {row.status === 'Closed' || row.status === 'Rejected' ? 'View Trail' : 'Track Status'}
-                      </span>
+                      </button>
                     </td>
                   </tr>
                 )

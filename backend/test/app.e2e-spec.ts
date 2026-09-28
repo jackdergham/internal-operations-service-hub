@@ -196,9 +196,6 @@ describe('AppController (e2e)', () => {
       .send({ decision: 'approve' })
       .expect(201);
 
-    // Approval hands the request straight to Fulfillment & Queue Management:
-    // by the time the decision call returns, the request has already moved
-    // past 'Approved' into 'In Progress' with a queue assignment created.
     const stored = await app.get(PrismaService).request.findUnique({
       where: { id: submission.body.request.id },
       include: { statusEvents: true, queueAssignment: true },

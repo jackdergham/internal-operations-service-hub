@@ -167,13 +167,6 @@ export class IntakeService implements OnModuleInit {
     });
   }
 
-  /**
-   * "Show me all my requests" — per data-model.md's Access section, filtered
-   * by requester_id. The caller's own identity (from x-actor-id, resolved by
-   * the controller) *is* the requesterId; there is no way to ask for anyone
-   * else's requests through this method, matching architecture.md's Trust
-   * boundary that a requester may only view their own requests.
-   */
   async listMyRequests(requesterId: string): Promise<RequestSummary[]> {
     const requests = await this.prisma.request.findMany({
       where: { requesterId },

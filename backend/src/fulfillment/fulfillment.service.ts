@@ -21,11 +21,6 @@ const ACTIONABLE_ROLES = ['fulfiller', 'admin'] as const;
 export class FulfillmentService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Called once a request's RoutingDecision reaches ReadyForQueue (approved,
-   * or direct-routed). Idempotent: safe to call more than once for the same
-   * request, e.g. on server restart replaying persisted state.
-   */
   async registerReadyForQueue(request: { id: string; queue: string }): Promise<void> {
     const existing = await this.prisma.queueAssignment.findUnique({
       where: { requestId: request.id },
