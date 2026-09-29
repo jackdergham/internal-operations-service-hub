@@ -4,7 +4,7 @@ import { StructuredLogger } from '../../logging/structured-logger.service.js';
 import type { AppEnv } from '../../env/env.types.js';
 
 const envFor = (overrides: Partial<AppEnv> = {}): AppEnv => ({
-  databaseUrl: 'file:./test.db',
+  databaseUrl: 'postgresql://iosh:iosh@localhost:5433/iosh',
   port: 3000,
   aiProvider: 'gemini',
   geminiApiKey: 'test-key',

@@ -1,13 +1,13 @@
 import { ConfigError, DEFAULT_GEMINI_MODEL, DEFAULT_PORT, loadEnv } from './env.config.js';
 
-const valid = { DATABASE_URL: 'file:./dev.db' } as Record<string, string | undefined>;
+const valid = { DATABASE_URL: 'postgresql://iosh:iosh@localhost:5433/iosh' } as Record<string, string | undefined>;
 
 const load = (overrides: Record<string, string | undefined> = {}) => loadEnv({ ...valid, ...overrides });
 
 describe('loadEnv', () => {
   it('accepts a minimal environment and fills in every default', () => {
     expect(load()).toEqual({
-      databaseUrl: 'file:./dev.db',
+      databaseUrl: 'postgresql://iosh:iosh@localhost:5433/iosh',
       port: DEFAULT_PORT,
       aiProvider: 'local',
       geminiApiKey: undefined,

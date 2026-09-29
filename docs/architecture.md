@@ -33,7 +33,7 @@ Data flow of functional requirements 1 (submission), 3 (status tracking), and 10
 
 ## External dependencies:
 
-- **Admin & Configuration** (not yet documented): source of request type schemas; this component reads schemas but does not define them.
+- **Admin & Configuration**: source of request type schemas; this component reads schemas but does not define them.
 - **File / attachment storage**: needed for requester-attached files; ownership and retention policy are a dependency, not decided here.
 - **Identity provider / SSO**: needed to know who the requester is at submission time.
 

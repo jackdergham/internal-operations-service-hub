@@ -1,0 +1,105 @@
+name: CI
+
+# Runs on pull requests so breakage is visible before it reaches main, and on
+# every push to main so each submitted SHA carries its own green run.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A newer push to the same branch makes the previous run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (lint, build, unit, e2e, evals)
+    runs-on: ubuntu-latest
+
+    # The schema targets PostgreSQL in CI exactly as it does locally and in
+    # deployment, so the release gate exercises the same engine as production.
+    # A bare runner has no database, so this is required rather than optional.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: iosh
+          POSTGRES_PASSWORD: iosh
+          POSTGRES_DB: iosh
+        ports:
+          - 5433:5432
+        # Without this the job starts before Postgres accepts connections and
+        # fails intermittently rather than deterministically.
+        options: >-
+          --health-cmd "pg_isready -U iosh"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://iosh:iosh@localhost:5433/iosh
+      # The deterministic provider needs no API key, so this gate — and the
+      # Week 4 evidence it produces — is reproducible by anyone who clones the
+      # repository, with no credentials.
+      AI_PROVIDER: local
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      # Generate before build: the Prisma client types must exist for tsc.
+      - run: npm run db:generate
+      - run: npm run db:push
+      - run: npm run lint
+      # vitest transpiles without typechecking, so the build is the only gate
+      # that catches type errors.
+      - run: npm run build
+
+      # Unit and e2e share one database, and vitest.config.ts sets
+      # fileParallelism: false for exactly that reason. Keep these sequential in
+      # this single job; running them as parallel jobs against the same database
+      # would have them wipe each other's data.
+      - run: npm test
+      - run: npm run test:e2e
+      - run: npm run eval:ai
+
+  frontend:
+    name: Frontend (lint, build)
+    runs-on: ubuntu-latest
+
+    # No database: the frontend is a static build and needs nothing from CI's
+    # service container, so it runs in parallel with the backend job.
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      # tsc -b is the frontend typecheck.
+      - run: npm run build
+      # VITE_API_BASE_URL is deliberately unset: an unset value means "same
+      # origin" in a production build, which is how the single-deployment
+      # target serves the app. Setting it to a localhost address here would
+      # bake a broken base URL into the build.
