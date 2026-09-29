@@ -165,7 +165,7 @@ describe('AppController (e2e)', () => {
 
     const deptHeadQueueBefore = await request(app.getHttpServer())
       .get('/routing-decisions/queue')
-      .set('x-actor-id', 'depthead-it')
+      .set('x-actor-id', 'dept-head-it')
       .expect(200);
     expect(deptHeadQueueBefore.body.some((item: { requestId: string }) => item.requestId === requestId)).toBe(false);
 
@@ -176,12 +176,12 @@ describe('AppController (e2e)', () => {
       .send({ decision: 'approve' })
       .expect(201);
 
-    const step2 = await findQueueItem('depthead-it', requestId);
+    const step2 = await findQueueItem('dept-head-it', requestId);
     expect(step2).toBeTruthy();
 
     const final = await request(app.getHttpServer())
       .post(`/routing-decisions/${step2.decisionId}/steps/${step2.stepId}/decision`)
-      .set('x-actor-id', 'depthead-it')
+      .set('x-actor-id', 'dept-head-it')
       .send({ decision: 'approve' })
       .expect(201);
     expect(final.body.status).toBe('ReadyForQueue');
@@ -197,7 +197,7 @@ describe('AppController (e2e)', () => {
       })),
     ).toEqual([
       { approverId: 'manager-1', status: 'Approved' },
-      { approverId: 'depthead-it', status: 'Approved' },
+      { approverId: 'dept-head-it', status: 'Approved' },
     ]);
   });
 

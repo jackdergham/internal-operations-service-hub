@@ -103,7 +103,7 @@ const requests = [
       id: 'seed-routing-002',
       requestTypeId: 'pto-request',
       requesterId: 'employee-2',
-      status: 'Approved',
+      status: 'ReadyForQueue',
       destinationQueue: 'HR',
       approvalSteps: [
         {
@@ -146,17 +146,26 @@ const requests = [
     requestTypeId: 'desk-relocation',
     description: 'Please move my desk closer to the product team area.',
     formData: { department: 'Operations', newLocation: 'Building B, Floor 2' },
-    status: 'Submitted',
+    status: 'In Progress',
     idempotencyKey: 'seed-request-003',
     createdAt: new Date('2026-01-20T14:00:00.000Z'),
-    events: [['seed-event-003-submitted', 'Submitted', 'intake', '2026-01-20T14:00:00.000Z']],
+    events: [
+      ['seed-event-003-submitted', 'Submitted', 'intake', '2026-01-20T14:00:00.000Z'],
+      ['seed-event-003-in-progress', 'In Progress', 'fulfillment', '2026-01-20T14:00:01.000Z'],
+    ],
     routingDecision: {
       id: 'seed-routing-003',
       requestTypeId: 'desk-relocation',
       requesterId: 'employee-1',
-      status: 'RoutedDirect',
+      status: 'ReadyForQueue',
       destinationQueue: 'Operations',
       approvalSteps: [],
+    },
+    queueAssignment: {
+      id: 'seed-assignment-003',
+      queue: 'Operations',
+      assignedFulfillerId: null,
+      createdAt: new Date('2026-01-20T14:00:01.000Z'),
     },
   },
 ];

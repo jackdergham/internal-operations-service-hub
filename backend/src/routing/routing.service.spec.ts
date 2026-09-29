@@ -90,12 +90,12 @@ describe('RoutingService database integration', () => {
     await service.registerRequest({ id, requesterId: 'employee-2', requestTypeId: 'pto-request', createdAt: new Date() });
 
     let decision = await service.findDecisionForRequest(id);
-    expect(decision?.approvalSteps.map((s) => s.approverId)).toEqual(['manager-2', 'depthead-hr']);
+    expect(decision?.approvalSteps.map((s) => s.approverId)).toEqual(['manager-2', 'dept-head-hr']);
     expect(decision?.approvalSteps[0].status).toBe('Pending');
     expect(decision?.approvalSteps[1].status).toBe('Blocked');
 
     await expect(
-      service.decideApproval(decision!.id, decision!.approvalSteps[1].id, { approverId: 'depthead-hr', decision: 'approve' }),
+      service.decideApproval(decision!.id, decision!.approvalSteps[1].id, { approverId: 'dept-head-hr', decision: 'approve' }),
     ).rejects.toThrow(ConflictException);
 
     await service.decideApproval(decision!.id, decision!.approvalSteps[0].id, { approverId: 'manager-2', decision: 'approve' });
@@ -106,7 +106,7 @@ describe('RoutingService database integration', () => {
     expect(decision?.approvalSteps[1].status).toBe('Pending');
     expect((await prisma.request.findUniqueOrThrow({ where: { id } })).status).toBe('Pending Approval');
 
-    const final = await service.decideApproval(decision!.id, decision!.approvalSteps[1].id, { approverId: 'depthead-hr', decision: 'approve' });
+    const final = await service.decideApproval(decision!.id, decision!.approvalSteps[1].id, { approverId: 'dept-head-hr', decision: 'approve' });
     expect(final.status).toBe('ReadyForQueue');
     expect((await prisma.request.findUniqueOrThrow({ where: { id } })).status).toBe('Approved');
   });
