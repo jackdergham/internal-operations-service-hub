@@ -10,6 +10,11 @@ export type AppEnv = {
   geminiModel: string;
   /** Exact CORS allow-list. Defaults to the two Vite dev origins when unset. */
   frontendOrigins: string[];
+  /**
+   * Directory of built frontend assets to serve, or undefined to serve the API
+   * only. A single deployment serves both, which is why this exists.
+   */
+  staticDir: string | undefined;
   /** Non-fatal configuration problems, surfaced once at startup. */
   warnings: string[];
 };

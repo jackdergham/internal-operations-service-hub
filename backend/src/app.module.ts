@@ -1,8 +1,6 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import type { NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
 import { RoutingModule } from './routing/routing.module.js';
 import { IntakeModule } from './intake/intake.module.js';
 import { PrismaModule } from './prisma.module.js';
@@ -32,9 +30,8 @@ import { RequestLoggingExceptionFilter } from './logging/request-logging.excepti
     ReportsModule,
     HealthModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     RequestIdMiddleware,
     { provide: APP_INTERCEPTOR, useClass: RequestLoggingInterceptor },
     { provide: APP_FILTER, useClass: RequestLoggingExceptionFilter },

@@ -112,6 +112,7 @@ export function loadEnv(source: EnvSource): AppEnv {
     geminiApiKey: read(source, 'GEMINI_API_KEY'),
     geminiModel: read(source, 'GEMINI_MODEL') ?? DEFAULT_GEMINI_MODEL,
     frontendOrigins,
+    staticDir: read(source, 'STATIC_DIR'),
     warnings: collectWarnings(source, aiProvider),
   };
 }
