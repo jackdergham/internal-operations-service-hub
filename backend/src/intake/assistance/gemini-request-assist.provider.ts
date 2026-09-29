@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LocalRequestAssistProvider } from './local-request-assist.provider.js';
+import { StructuredLogger } from '../../logging/structured-logger.service.js';
 import type {
   AssistRequestSuggestion,
   RequestAssistProvider,
@@ -9,11 +10,23 @@ const geminiModel = process.env.GEMINI_MODEL ?? 'gemini-3.5-flash-lite';
 
 @Injectable()
 export class GeminiRequestAssistProvider implements RequestAssistProvider {
-  constructor(private readonly localProvider: LocalRequestAssistProvider) {}
+  constructor(
+    private readonly localProvider: LocalRequestAssistProvider,
+    private readonly logger: StructuredLogger,
+  ) {}
 
   async suggest(description: string): Promise<AssistRequestSuggestion> {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return this.localProvider.suggest(description);
+    if (!apiKey) {
+      this.logger.info('assist.provider.fallback', {
+        provider: 'gemini',
+        reason: 'missing_api_key',
+        fallback: 'local',
+      });
+      return this.localProvider.suggest(description);
+    }
+
+    let failureReason = 'provider_request_failed';
 
     try {
       const response = await fetch(
@@ -41,13 +54,28 @@ export class GeminiRequestAssistProvider implements RequestAssistProvider {
         },
       );
 
-      if (!response.ok) throw new Error(`Gemini request failed with status ${response.status}`);
+      if (!response.ok) {
+        failureReason = 'provider_http_error';
+        throw new Error(`Gemini request failed with status ${response.status}`);
+      }
       const payload = await response.json() as GeminiResponse;
       const text = payload.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error('Gemini returned no suggestion');
+      if (!text) {
+        failureReason = 'invalid_suggestion';
+        throw new Error('Gemini returned no suggestion');
+      }
 
       return this.parseSuggestion(text);
-    } catch {
+    } catch (error) {
+      // The description is user content and the key travels in the query string,
+      // so neither is logged here; the sanitizing logger masks the rest.
+      this.logger.warn('assist.provider.fallback', {
+        provider: 'gemini',
+        reason: failureReason,
+        fallback: 'local',
+        error,
+      });
+
       const fallback = await this.localProvider.suggest(description);
       return {
         ...fallback,

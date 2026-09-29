@@ -66,6 +66,39 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
+  it('reports liveness and readiness without authentication', async () => {
+    await request(app.getHttpServer())
+      .get('/health')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.status).toBe('ok');
+        expect(body.service).toBe('internal-operations-hub');
+      });
+
+    await request(app.getHttpServer())
+      .get('/health/ready')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.status).toBe('ready');
+        expect(body.checks.database.status).toBe('ok');
+      });
+  });
+
+  it('echoes a supplied request id back on the response', async () => {
+    await request(app.getHttpServer())
+      .get('/health')
+      .set('x-request-id', 'e2e-correlation-id')
+      .expect(200)
+      .expect('x-request-id', 'e2e-correlation-id');
+  });
+
+  it('assigns a request id when the caller supplies none', async () => {
+    await request(app.getHttpServer())
+      .get('/health')
+      .expect(200)
+      .expect('x-request-id', /^[0-9a-f-]{36}$/);
+  });
+
   const submitNewLaptop = async (requesterId: string, idempotencyKey: string) => {
     const response = await request(app.getHttpServer())
       .post('/requests')
