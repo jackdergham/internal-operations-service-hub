@@ -451,7 +451,11 @@ function App() {
           </section>
 
           <section className={`tab-pane ${activeTab === 'reports' ? 'visible' : 'hidden'}`}>
-            <ReportsView showToast={showToast} />
+            <ReportsView
+              apiBaseUrl={apiBaseUrl}
+              actorId={currentUser?.employeeId ?? ''}
+              showToast={showToast}
+            />
           </section>
 
           <section className={`tab-pane ${activeTab === 'config' ? 'visible' : 'hidden'}`}>
