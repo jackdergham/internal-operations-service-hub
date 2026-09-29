@@ -1,6 +1,8 @@
 import type { RequestSummary } from '../api/intakeApi'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { isSearching, matchesSearch } from '../search'
+import { fetchRequestAudit } from '../api/auditApi'
+import type { RequestAudit } from '../api/auditApi'
 
 const STAGES = ['Submitted', 'Pending Approval', 'Approved', 'In Progress', 'Resolved', 'Closed'] as const
 const STAGE_ICONS: Record<string, string> = {
@@ -43,10 +45,43 @@ type Props = {
   requests: RequestSummary[]
   searchTerm: string
   loading: boolean
+  apiBaseUrl: string
+  actorId: string
 }
 
-export default function MyRequestsView({ requests, searchTerm, loading }: Props) {
+export default function MyRequestsView({ requests, searchTerm, loading, apiBaseUrl, actorId }: Props) {
   const [trackedRequestId, setTrackedRequestId] = useState<string | null>(null)
+  const [audit, setAudit] = useState<RequestAudit | null>(null)
+  const [auditLoading, setAuditLoading] = useState(false)
+
+  const searching = isSearching(searchTerm)
+  const visible = requests.filter((request) =>
+    matchesSearch(searchTerm, [request.id, request.requestTypeName, request.department, request.description, request.status]))
+  const tracked = visible.find((request) => request.id === trackedRequestId) ?? visible[0] ?? null
+  const trackedId = tracked?.id ?? null
+
+  useEffect(() => {
+    if (!trackedId) {
+      setAudit(null)
+      setAuditLoading(false)
+      return
+    }
+    let cancelled = false
+    setAuditLoading(true)
+    fetchRequestAudit(apiBaseUrl, actorId, trackedId)
+      .then((result) => {
+        if (!cancelled) setAudit(result)
+      })
+      .catch(() => {
+        if (!cancelled) setAudit(null)
+      })
+      .finally(() => {
+        if (!cancelled) setAuditLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [trackedId, apiBaseUrl, actorId])
 
   if (loading) {
     return (
@@ -72,11 +107,7 @@ export default function MyRequestsView({ requests, searchTerm, loading }: Props)
     )
   }
 
-  const searching = isSearching(searchTerm)
-  const visible = requests.filter((request) =>
-    matchesSearch(searchTerm, [request.id, request.requestTypeName, request.department, request.description, request.status]))
-
-  if (visible.length === 0) {
+  if (visible.length === 0 || !tracked) {
     return (
       <div className="table-panel">
         <div className="table-header">
@@ -90,11 +121,12 @@ export default function MyRequestsView({ requests, searchTerm, loading }: Props)
     )
   }
 
-  const tracked = visible.find((request) => request.id === trackedRequestId) ?? visible[0]
   const rejected = tracked.status === 'Rejected'
   const currentStageIndex = rejected
     ? STAGES.indexOf('Pending Approval')
     : (STAGES as readonly string[]).indexOf(tracked.status)
+  const rejectedStep = audit?.routingDecision?.approvalSteps.find((step) => step.status === 'Rejected')
+  const visibleComments = audit?.comments ?? []
 
   return (
     <>
@@ -141,6 +173,30 @@ export default function MyRequestsView({ requests, searchTerm, loading }: Props)
             </div>
           )}
         </div>
+
+        {auditLoading && <p className="audit-loading">Loading trail details…</p>}
+
+        {!auditLoading && rejected && (
+          <div className="audit-note audit-note-rejected">
+            <strong>Why this was rejected</strong>
+            <p>{rejectedStep?.rejectionReason ?? 'No reason was recorded for this rejection.'}</p>
+            {rejectedStep?.decidedBy && <span className="audit-note-meta">Decided by {rejectedStep.decidedBy}</span>}
+          </div>
+        )}
+
+        {!auditLoading && visibleComments.length > 0 && (
+          <div className="audit-note audit-comments">
+            <strong>Comments on this request</strong>
+            <ul>
+              {visibleComments.map((comment) => (
+                <li key={comment.id}>
+                  <span className="audit-comment-meta">{comment.authorId} · {formatDate(comment.createdAt)}</span>
+                  <p>{comment.body}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div className="table-panel">

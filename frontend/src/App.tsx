@@ -390,7 +390,13 @@ function App() {
           </section>
 
           <section className={`tab-pane ${activeTab === 'myrequests' ? 'visible' : 'hidden'}`}>
-            <MyRequestsView requests={myRequests} searchTerm={searchTerm} loading={myRequestsLoading} />
+            <MyRequestsView
+              requests={myRequests}
+              searchTerm={searchTerm}
+              loading={myRequestsLoading}
+              apiBaseUrl={apiBaseUrl}
+              actorId={currentUser?.employeeId ?? ''}
+            />
           </section>
 
           <section className={`tab-pane ${activeTab === 'teamqueue' ? 'visible' : 'hidden'}`}>

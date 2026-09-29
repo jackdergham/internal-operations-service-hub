@@ -1,6 +1,6 @@
 export type ApprovalDecision = 'approve' | 'reject';
 
-export type ApprovalStepStatus = 'Pending' | 'Approved' | 'Rejected';
+export type ApprovalStepStatus = 'Pending' | 'Blocked' | 'Approved' | 'Rejected';
 
 export type RoutingDecisionStatus =
   | 'Evaluating'

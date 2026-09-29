@@ -57,8 +57,38 @@ model Request {
   statusEvents        StatusEvent[]
   queueAssignment     QueueAssignment?
   fulfillmentComments FulfillmentComment[]
+  routingDecision     RoutingDecision?
 
   @@index([requesterId])
+}
+
+model RoutingDecision {
+  id               String                 @id
+  requestId        String                 @unique
+  requestTypeId    String
+  requesterId      String
+  status           String                 @default("AwaitingApproval")
+  destinationQueue String
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  request          Request                @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  approvalSteps    ApprovalStepInstance[]
+}
+
+model ApprovalStepInstance {
+  id                String          @id
+  routingDecisionId String
+  stepNumber        Int
+  approverId        String
+  status            String          @default("Pending")
+  decidedBy         String?
+  decidedAt         DateTime?
+  rejectionReason   String?
+  createdAt         DateTime        @default(now())
+  routingDecision   RoutingDecision @relation(fields: [routingDecisionId], references: [id], onDelete: Cascade)
+
+  @@unique([routingDecisionId, stepNumber])
+  @@index([approverId, status])
 }
 
 model QueueAssignment {

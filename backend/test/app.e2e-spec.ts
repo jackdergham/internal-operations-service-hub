@@ -24,9 +24,36 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  it('approves a pending approval step', () => {
-    return request(app.getHttpServer())
-      .post('/routing-decisions/decision-1/steps/step-1/decision')
+  const submitNewLaptop = async (requesterId: string, idempotencyKey: string) => {
+    const response = await request(app.getHttpServer())
+      .post('/requests')
+      .set('x-actor-id', requesterId)
+      .send({
+        requesterId,
+        requestTypeId: 'new-laptop',
+        description: 'Routing decision e2e fixture request.',
+        formData: {},
+        idempotencyKey,
+      })
+      .expect(201);
+    return response.body.request.id as string;
+  };
+
+  const findQueueItem = async (approverId: string, requestId: string) => {
+    const queue = await request(app.getHttpServer())
+      .get('/routing-decisions/queue')
+      .set('x-actor-id', approverId)
+      .expect(200);
+    return queue.body.find((item: { requestId: string }) => item.requestId === requestId);
+  };
+
+  it('approves a pending approval step', async () => {
+    const requestId = await submitNewLaptop('employee-1', `approve-step-${Date.now()}`);
+    const item = await findQueueItem('manager-1', requestId);
+    expect(item).toBeTruthy();
+
+    await request(app.getHttpServer())
+      .post(`/routing-decisions/${item.decisionId}/steps/${item.stepId}/decision`)
       .set('x-actor-id', 'manager-1')
       .send({ decision: 'approve' })
       .expect(201)
@@ -36,9 +63,12 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('rejects a decision from the wrong approver', () => {
+  it('rejects a decision from the wrong approver', async () => {
+    const requestId = await submitNewLaptop('employee-1', `wrong-approver-${Date.now()}`);
+    const item = await findQueueItem('manager-1', requestId);
+
     return request(app.getHttpServer())
-      .post('/routing-decisions/decision-1/steps/step-1/decision')
+      .post(`/routing-decisions/${item.decisionId}/steps/${item.stepId}/decision`)
       .set('x-actor-id', 'employee-1')
       .send({ decision: 'approve' })
       .expect(403);
@@ -46,18 +76,116 @@ describe('AppController (e2e)', () => {
 
   it('rejects a decision from an actor unknown to the directory', () => {
     return request(app.getHttpServer())
-      .post('/routing-decisions/decision-1/steps/step-1/decision')
+      .post('/routing-decisions/anything/steps/anything/decision')
       .set('x-actor-id', 'someone-not-in-the-directory')
       .send({ decision: 'approve' })
       .expect(401);
   });
 
-  it('requires a reason for rejection', () => {
+  it('requires a reason for rejection', async () => {
+    const requestId = await submitNewLaptop('employee-1', `needs-reason-${Date.now()}`);
+    const item = await findQueueItem('manager-1', requestId);
+
     return request(app.getHttpServer())
-      .post('/routing-decisions/decision-1/steps/step-1/decision')
+      .post(`/routing-decisions/${item.decisionId}/steps/${item.stepId}/decision`)
       .set('x-actor-id', 'manager-1')
       .send({ decision: 'reject' })
       .expect(400);
+  });
+
+  it('supports a sequential multi-step approval chain (manager, then department head)', async () => {
+    const requestTypeId = `e2e-multistep-${Date.now()}`;
+    await request(app.getHttpServer())
+      .put(`/admin/config/request-types/${requestTypeId}`)
+      .set('x-actor-id', 'admin-1')
+      .send({
+        name: 'E2E multi-step type',
+        department: 'IT',
+        schema: { fields: [], required: [] },
+        routingMode: 'approval',
+        destinationQueue: 'IT',
+        approvalChain: [{ type: 'manager' }, { type: 'department-head' }],
+      })
+      .expect(200);
+
+    const submission = await request(app.getHttpServer())
+      .post('/requests')
+      .set('x-actor-id', 'employee-1')
+      .send({
+        requesterId: 'employee-1',
+        requestTypeId,
+        description: 'Multi-step approval e2e request.',
+        formData: {},
+        idempotencyKey: `multistep-${Date.now()}`,
+      })
+      .expect(201);
+    const requestId = submission.body.request.id;
+
+    const deptHeadQueueBefore = await request(app.getHttpServer())
+      .get('/routing-decisions/queue')
+      .set('x-actor-id', 'depthead-it')
+      .expect(200);
+    expect(deptHeadQueueBefore.body.some((item: { requestId: string }) => item.requestId === requestId)).toBe(false);
+
+    const step1 = await findQueueItem('manager-1', requestId);
+    await request(app.getHttpServer())
+      .post(`/routing-decisions/${step1.decisionId}/steps/${step1.stepId}/decision`)
+      .set('x-actor-id', 'manager-1')
+      .send({ decision: 'approve' })
+      .expect(201);
+
+    const step2 = await findQueueItem('depthead-it', requestId);
+    expect(step2).toBeTruthy();
+
+    const final = await request(app.getHttpServer())
+      .post(`/routing-decisions/${step2.decisionId}/steps/${step2.stepId}/decision`)
+      .set('x-actor-id', 'depthead-it')
+      .send({ decision: 'approve' })
+      .expect(201);
+    expect(final.body.status).toBe('ReadyForQueue');
+
+    const audit = await request(app.getHttpServer())
+      .get(`/requests/${requestId}/audit`)
+      .set('x-actor-id', 'employee-1')
+      .expect(200);
+    expect(
+      audit.body.routingDecision.approvalSteps.map((step: { approverId: string; status: string }) => ({
+        approverId: step.approverId,
+        status: step.status,
+      })),
+    ).toEqual([
+      { approverId: 'manager-1', status: 'Approved' },
+      { approverId: 'depthead-it', status: 'Approved' },
+    ]);
+  });
+
+  it('exposes the rejection reason through the shared audit endpoint, scoped by viewer', async () => {
+    const requestId = await submitNewLaptop('employee-1', `audit-reject-${Date.now()}`);
+    const item = await findQueueItem('manager-1', requestId);
+
+    await request(app.getHttpServer())
+      .post(`/routing-decisions/${item.decisionId}/steps/${item.stepId}/decision`)
+      .set('x-actor-id', 'manager-1')
+      .send({ decision: 'reject', reason: 'Not approved this quarter' })
+      .expect(201);
+
+    const asRequester = await request(app.getHttpServer())
+      .get(`/requests/${requestId}/audit`)
+      .set('x-actor-id', 'employee-1')
+      .expect(200);
+    expect(asRequester.body.routingDecision.approvalSteps[0].rejectionReason).toBe('Not approved this quarter');
+    expect(asRequester.body.status).toBe('Rejected');
+
+    await request(app.getHttpServer())
+      .get(`/requests/${requestId}/audit`)
+      .set('x-actor-id', 'employee-2')
+      .expect(403);
+
+    const asAdmin = await request(app.getHttpServer())
+      .get(`/requests/${requestId}/audit`)
+      .set('x-actor-id', 'admin-1')
+      .expect(200);
+    expect(asAdmin.body.status).toBe('Rejected');
   });
 
   it('creates and persists a service request through the HTTP contract', () => {

@@ -7,9 +7,10 @@ import { PrismaModule } from './prisma.module.js';
 import { FulfillmentModule } from './fulfillment/fulfillment.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { ConfigModule } from './config/config.module.js';
+import { AuditModule } from './audit/audit.module.js';
 
 @Module({
-  imports: [PrismaModule, NotificationsModule, IntakeModule, RoutingModule, FulfillmentModule, ConfigModule],
+  imports: [PrismaModule, NotificationsModule, IntakeModule, RoutingModule, FulfillmentModule, ConfigModule, AuditModule],
   controllers: [AppController],
   providers: [AppService],
 })
