@@ -8,5 +8,6 @@ export default defineConfig({
     root: './',
     fileParallelism: false,
     include: ['**/*.spec.ts'],
+    fileParallelism: false,
   },
 });

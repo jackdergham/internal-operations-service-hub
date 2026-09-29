@@ -15,13 +15,6 @@ export const myRequestRows = [
   { id: 'OPS-1007', title: 'Corporate card uplift', service: 'Finance / Cards', owner: 'Finance Ops', status: 'Awaiting review', state: 'Pending' },
 ]
 
-export const reportMetrics = [
-  { label: 'Avg resolution time', value: '8.2h', delta: '+12%' },
-  { label: 'Workflow completion', value: '93.7%', delta: '+3.8%' },
-  { label: 'Escalations', value: '14', delta: '-19%' },
-  { label: 'SLA breaches', value: '2.1%', delta: 'Stable' },
-]
-
 export const initialFields: DynamicField[] = [
   { id: 'field-1', name: 'Employee ID', type: 'TEXT', required: true },
   { id: 'field-2', name: 'Business Justification', type: 'LONGTEXT', required: true },

@@ -8,9 +8,10 @@ import { FulfillmentModule } from './fulfillment/fulfillment.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { ConfigModule } from './config/config.module.js';
 import { AuditModule } from './audit/audit.module.js';
+import { ReportsModule } from './reports/reports.module.js';
 
 @Module({
-  imports: [PrismaModule, NotificationsModule, IntakeModule, RoutingModule, FulfillmentModule, ConfigModule, AuditModule],
+  imports: [PrismaModule, NotificationsModule, IntakeModule, RoutingModule, FulfillmentModule, ConfigModule, AuditModule, ReportsModule],
   controllers: [AppController],
   providers: [AppService],
 })
