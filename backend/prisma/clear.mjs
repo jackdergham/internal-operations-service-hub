@@ -4,7 +4,18 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const [comments, assignments, statusEvents, attachments, requests, requestTypes, requestTypeVersions, notifications] = await prisma.$transaction([
+  const [
+    comments,
+    assignments,
+    statusEvents,
+    attachments,
+    requests,
+    requestTypes,
+    requestTypeVersions,
+    notifications,
+    routingDecisions,
+    approvalSteps,
+  ] = await prisma.$transaction([
     prisma.fulfillmentComment.deleteMany(),
     prisma.queueAssignment.deleteMany(),
     prisma.statusEvent.deleteMany(),
@@ -13,13 +24,16 @@ async function main() {
     prisma.requestType.deleteMany(),
     prisma.requestTypeVersion.deleteMany(),
     prisma.notification.deleteMany(),
+    prisma.routingDecision.deleteMany(),
+    prisma.approvalStepInstance.deleteMany(),
   ]);
 
   console.log(
     `Cleared ${requests.count} requests, ${requestTypes.count} request types, ` +
       `${statusEvents.count} status events, ${attachments.count} attachments, ` +
-      `${assignments.count} queue assignments, and ${comments.count} comments.` +
-      `${requestTypeVersions.count} request type versions, and ${notifications.count} notifications.`
+      `${assignments.count} queue assignments, ${comments.count} comments, ` +
+      `${requestTypeVersions.count} request type versions, ${notifications.count} notifications, ` +
+      `${routingDecisions.count} routing decisions, and ${approvalSteps.count} approval steps.`
   );
 }
 

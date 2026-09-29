@@ -61,6 +61,21 @@ const requests = [
       ['seed-event-001-submitted', 'Submitted', 'intake', '2026-01-15T09:00:00.000Z'],
       ['seed-event-001-pending', 'Pending Approval', 'routing', '2026-01-15T09:00:01.000Z'],
     ],
+    routingDecision: {
+      id: 'seed-routing-001',
+      requestTypeId: 'new-laptop',
+      requesterId: 'employee-1',
+      status: 'AwaitingApproval',
+      destinationQueue: 'IT',
+      approvalSteps: [
+        {
+          id: 'seed-approval-001',
+          stepNumber: 1,
+          approverId: 'manager-1',
+          status: 'Pending',
+        },
+      ],
+    },
     attachment: {
       id: 'seed-attachment-001',
       filename: 'laptop-requirements.pdf',
@@ -84,6 +99,31 @@ const requests = [
       ['seed-event-002-approved', 'Approved', 'routing', '2026-01-11T08:15:00.000Z'],
       ['seed-event-002-in-progress', 'In Progress', 'fulfillment', '2026-01-11T08:16:00.000Z'],
     ],
+    routingDecision: {
+      id: 'seed-routing-002',
+      requestTypeId: 'pto-request',
+      requesterId: 'employee-2',
+      status: 'Approved',
+      destinationQueue: 'HR',
+      approvalSteps: [
+        {
+          id: 'seed-approval-002-1',
+          stepNumber: 1,
+          approverId: 'manager-2',
+          status: 'Approved',
+          decidedBy: 'manager-2',
+          decidedAt: new Date('2026-01-11T08:15:00.000Z'),
+        },
+        {
+          id: 'seed-approval-002-2',
+          stepNumber: 2,
+          approverId: 'dept-head-hr',
+          status: 'Approved',
+          decidedBy: 'dept-head-hr',
+          decidedAt: new Date('2026-01-11T08:15:00.000Z'),
+        },
+      ],
+    },
     queueAssignment: {
       id: 'seed-assignment-002',
       queue: 'HR',
@@ -110,6 +150,14 @@ const requests = [
     idempotencyKey: 'seed-request-003',
     createdAt: new Date('2026-01-20T14:00:00.000Z'),
     events: [['seed-event-003-submitted', 'Submitted', 'intake', '2026-01-20T14:00:00.000Z']],
+    routingDecision: {
+      id: 'seed-routing-003',
+      requestTypeId: 'desk-relocation',
+      requesterId: 'employee-1',
+      status: 'RoutedDirect',
+      destinationQueue: 'Operations',
+      approvalSteps: [],
+    },
   },
 ];
 
@@ -123,7 +171,7 @@ async function main() {
   }
 
   for (const request of requests) {
-    const { events, attachment, queueAssignment, comments, ...requestData } = request;
+    const { events, attachment, queueAssignment, comments, routingDecision, ...requestData } = request;
 
     await prisma.request.upsert({
       where: { id: request.id },
@@ -137,6 +185,23 @@ async function main() {
         update: { status, source, createdAt: new Date(createdAt) },
         create: { id, requestId: request.id, status, source, createdAt: new Date(createdAt) },
       });
+    }
+
+    if (routingDecision) {
+      const { approvalSteps, ...routingDecisionData } = routingDecision;
+      await prisma.routingDecision.upsert({
+        where: { id: routingDecisionData.id },
+        update: { ...routingDecisionData, requestId: request.id },
+        create: { ...routingDecisionData, requestId: request.id },
+      });
+
+      for (const step of approvalSteps) {
+        await prisma.approvalStepInstance.upsert({
+          where: { id: step.id },
+          update: { ...step, routingDecisionId: routingDecisionData.id },
+          create: { ...step, routingDecisionId: routingDecisionData.id },
+        });
+      }
     }
 
     if (queueAssignment) {

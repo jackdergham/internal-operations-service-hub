@@ -50,6 +50,15 @@ describe('AuditService database integration', () => {
     await prisma.$disconnect();
   });
 
+  beforeEach(async () => {
+    await prisma.fulfillmentComment.deleteMany();
+    await prisma.queueAssignment.deleteMany();
+    await prisma.approvalStepInstance.deleteMany();
+    await prisma.routingDecision.deleteMany();
+    await prisma.statusEvent.deleteMany();
+    await prisma.request.deleteMany();
+  });
+
   const createRequest = async (requesterId: string) => {
     const id = `REQ-AUDIT-${randomUUID().slice(0, 8)}`;
     await prisma.request.create({

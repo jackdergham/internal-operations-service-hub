@@ -7,6 +7,7 @@ import { PrismaService } from './../src/prisma.service.js';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
+  let prisma: PrismaService;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -14,7 +15,48 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    prisma = app.get(PrismaService);
     await app.init();
+
+    // Clean database before each test
+    await prisma.fulfillmentComment.deleteMany();
+    await prisma.queueAssignment.deleteMany();
+    await prisma.approvalStepInstance.deleteMany();
+    await prisma.routingDecision.deleteMany();
+    await prisma.statusEvent.deleteMany();
+    await prisma.attachment.deleteMany();
+    await prisma.request.deleteMany();
+    await prisma.requestTypeVersion.deleteMany();
+    await prisma.requestType.deleteMany();
+
+    // Re-seed required request types
+    await prisma.requestType.upsert({
+      where: { id: 'new-laptop' },
+      update: { routingMode: 'approval', destinationQueue: 'IT', approvalChain: [{ type: 'manager' }] },
+      create: {
+        id: 'new-laptop', name: 'New laptop / equipment', department: 'IT',
+        schema: { required: [], fields: [] }, routingMode: 'approval',
+        destinationQueue: 'IT', approvalChain: [{ type: 'manager' }],
+      },
+    });
+    await prisma.requestType.upsert({
+      where: { id: 'pto-request' },
+      update: { routingMode: 'approval', destinationQueue: 'HR', approvalChain: [{ type: 'manager' }, { type: 'department-head' }] },
+      create: {
+        id: 'pto-request', name: 'PTO / annual leave', department: 'HR',
+        schema: { required: [], fields: [] }, routingMode: 'approval',
+        destinationQueue: 'HR', approvalChain: [{ type: 'manager' }, { type: 'department-head' }],
+      },
+    });
+    await prisma.requestType.upsert({
+      where: { id: 'desk-relocation' },
+      update: { routingMode: 'direct', destinationQueue: 'Operations', approvalChain: [] },
+      create: {
+        id: 'desk-relocation', name: 'Desk relocation', department: 'Operations',
+        schema: { required: [], fields: [] }, routingMode: 'direct',
+        destinationQueue: 'Operations', approvalChain: [],
+      },
+    });
   });
 
   it('/ (GET)', () => {
@@ -358,7 +400,7 @@ describe('AppController (e2e)', () => {
       .set('x-actor-id', 'fulfiller-it-1')
       .expect(201);
 
-    const closed = await app.get(PrismaService).request.findUnique({
+    const closed = await prisma.request.findUnique({
       where: { id: submission.body.request.id },
     });
     expect(closed?.status).toBe('Closed');

@@ -53,6 +53,13 @@ describe('RoutingService database integration', () => {
     await prisma.$disconnect();
   });
 
+  beforeEach(async () => {
+    await prisma.approvalStepInstance.deleteMany();
+    await prisma.routingDecision.deleteMany();
+    await prisma.statusEvent.deleteMany();
+    await prisma.request.deleteMany();
+  });
+
   const createRequest = async (requestTypeId: string, requesterId: string) => {
     const id = `REQ-ROUTING-${randomUUID().slice(0, 8)}`;
     await prisma.request.create({

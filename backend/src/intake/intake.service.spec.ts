@@ -20,6 +20,12 @@ describe('IntakeService database integration', () => {
     await prisma.$disconnect();
   });
 
+  beforeEach(async () => {
+    await prisma.attachment.deleteMany();
+    await prisma.statusEvent.deleteMany();
+    await prisma.request.deleteMany();
+  });
+
   it('persists an authorized request and its initial status event', async () => {
     const result = await service.createRequest('employee-1', {
       requesterId: 'employee-1',

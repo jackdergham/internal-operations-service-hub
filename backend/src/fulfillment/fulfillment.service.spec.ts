@@ -43,6 +43,10 @@ describe('FulfillmentService database integration', () => {
   });
 
   beforeEach(async () => {
+    await prisma.fulfillmentComment.deleteMany();
+    await prisma.queueAssignment.deleteMany();
+    await prisma.statusEvent.deleteMany();
+    await prisma.request.deleteMany();
     requestId = `REQ-FULFILLMENT-${randomUUID().slice(0, 8)}`;
     await prisma.request.create({
       data: {
