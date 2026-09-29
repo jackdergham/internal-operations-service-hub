@@ -26,9 +26,8 @@ import type { Actor } from './api/directoryApi'
 import { listNotifications, markNotificationRead } from './api/notificationsApi'
 import type { NotificationItem } from './api/notificationsApi'
 import { useCallback, useEffect, useState } from 'react'
+import { apiBaseUrl } from './apiBaseUrl'
 import './index.css'
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
 
 function initialsFor(name: string): string {
   return name

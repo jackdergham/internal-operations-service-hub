@@ -12,6 +12,7 @@ import { ConfigModule } from './config/config.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { ReportsModule } from './reports/reports.module.js';
 import { HealthModule } from './health/health.module.js';
+import { EnvModule } from './env/env.module.js';
 import { LoggingModule } from './logging/logging.module.js';
 import { RequestIdMiddleware } from './logging/request-id.middleware.js';
 import { RequestLoggingInterceptor } from './logging/request-logging.interceptor.js';
@@ -20,6 +21,7 @@ import { RequestLoggingExceptionFilter } from './logging/request-logging.excepti
 @Module({
   imports: [
     PrismaModule,
+    EnvModule,
     LoggingModule,
     NotificationsModule,
     IntakeModule,

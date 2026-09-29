@@ -8,6 +8,8 @@ import { RequestAssistService } from './assistance/request-assist.service.js';
 import { GeminiRequestAssistProvider } from './assistance/gemini-request-assist.provider.js';
 import { REQUEST_ASSIST_PROVIDER } from './assistance/request-assist.service.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
+import { APP_ENV } from '../env/env.module.js';
+import type { AppEnv } from '../env/env.types.js';
 
 @Module({
   imports: [RoutingModule, DirectoryModule, NotificationsModule],
@@ -19,11 +21,12 @@ import { NotificationsModule } from '../notifications/notifications.module.js';
     GeminiRequestAssistProvider,
     {
       provide: REQUEST_ASSIST_PROVIDER,
-      inject: [GeminiRequestAssistProvider, LocalRequestAssistProvider],
+      inject: [GeminiRequestAssistProvider, LocalRequestAssistProvider, APP_ENV],
       useFactory: (
         geminiProvider: GeminiRequestAssistProvider,
         localProvider: LocalRequestAssistProvider,
-      ) => process.env.AI_PROVIDER === 'gemini' ? geminiProvider : localProvider,
+        env: AppEnv,
+      ) => env.aiProvider === 'gemini' ? geminiProvider : localProvider,
     },
   ],
 })

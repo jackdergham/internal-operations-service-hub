@@ -1,22 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { LocalRequestAssistProvider } from './local-request-assist.provider.js';
 import { StructuredLogger } from '../../logging/structured-logger.service.js';
+import { APP_ENV } from '../../env/env.module.js';
+import type { AppEnv } from '../../env/env.types.js';
 import type {
   AssistRequestSuggestion,
   RequestAssistProvider,
 } from './request-assist.types.js';
 
-const geminiModel = process.env.GEMINI_MODEL ?? 'gemini-3.5-flash-lite';
-
 @Injectable()
 export class GeminiRequestAssistProvider implements RequestAssistProvider {
   constructor(
     private readonly localProvider: LocalRequestAssistProvider,
+    // AppEnv is a type alias, so it carries no runtime token to reflect on.
+    @Inject(APP_ENV) private readonly env: AppEnv,
     private readonly logger: StructuredLogger,
   ) {}
 
   async suggest(description: string): Promise<AssistRequestSuggestion> {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = this.env.geminiApiKey;
     if (!apiKey) {
       this.logger.info('assist.provider.fallback', {
         provider: 'gemini',
@@ -30,7 +32,7 @@ export class GeminiRequestAssistProvider implements RequestAssistProvider {
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${this.env.geminiModel}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
