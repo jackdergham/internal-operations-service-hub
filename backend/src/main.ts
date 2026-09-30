@@ -7,11 +7,18 @@ import { AppModule } from './app.module.js';
 import { APP_ENV } from './env/env.module.js';
 import type { AppEnv } from './env/env.types.js';
 import { StructuredLogger } from './logging/structured-logger.service.js';
+import { ensureSchema } from './ops/schema-bootstrap.js';
 
 async function bootstrap() {
+  const logger = new StructuredLogger();
+
+  // The schema must exist before Nest initialises, because RoutingService reads
+  // the request table in its onModuleInit hook. This runs before the app is
+  // created so a missing table can never reach that hook.
+  await ensureSchema(logger);
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const env = app.get<AppEnv>(APP_ENV);
-  const logger = new StructuredLogger();
 
   for (const problem of env.warnings) {
     logger.warn('config.warning', { detail: problem });

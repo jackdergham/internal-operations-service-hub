@@ -5,7 +5,7 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "npx prisma db push --schema=./prisma/schema.prisma && npx prisma db seed --schema=./prisma/schema.prisma && node dist/main.js",
+    "startCommand": "node dist/main.js",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE"
