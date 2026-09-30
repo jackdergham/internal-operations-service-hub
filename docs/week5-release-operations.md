@@ -1,10 +1,7 @@
 What was released, how it is built and gated, how it is operated, and what
 remains unproven.
 
-> **Status: pre-deployment.** Every result below was observed against the
-> production container image built from this commit, with a real PostgreSQL
-> instance. Sections marked **[PENDING]** can only be recorded against a live
-> URL; they are listed together under *Remaining work* at the end.
+**Live target:** <https://internal-operations-service-hub-production-8a07.up.railway.app/>
 
 ## Release identification
 
@@ -12,17 +9,36 @@ remains unproven.
 |---|---|
 | Repository | `jackdergham/internal-operations-service-hub` |
 | Release branch | `main` |
-| Release SHA | `3afeba9` — *Add release gate, smoke test and updated docs* |
-| Release gate | GitHub Actions, green on `3afeba9` |
+| Release SHA | `3ae3f59` — *Create the database schema on boot in production* |
+| Release gate | GitHub Actions, green on the release SHA |
+| Deployed target | Single Railway service, one origin, one URL |
 | Database | PostgreSQL 17 — same engine locally, in CI, and deployed |
+| Verification | Smoke test 13/13 on the live target, before and after a controlled failure |
 
 `main` was fast-forwarded to the feature branch, so the released commit is the
 same commit that was reviewed and tested, with no intervening merge commit.
 
-The deploy configuration (`Dockerfile`, `railway.json`, `.dockerignore`) was
-written after the gate went green and lands in a later commit. **The deployed
-SHA is recorded once the deployment exists** and is the commit the live target
-runs.
+The three areas named in the release-ownership brief — required checks, health
+and operations evidence, and real recovery — are evidenced below against the
+deployed target rather than described.
+
+### The submitted commit differs from the deployed commit by documentation only
+
+The commit submitted for review comes after `3ae3f59` and changes only
+documentation: this file and the README's *Live App* section. It is the
+deployment evidence that had to be written **after** the target existed, since it
+records the live URL, the observed smoke output, and the failure and recovery
+transcript.
+
+**No source file, test, or configuration differs between the deployed commit and
+the submitted commit.** The running application is byte-for-byte the application
+in the submitted repository, so everything evidenced below — the 13-check smoke
+run, the health and readiness behaviour, and the failure and recovery cycle —
+remains true of the submitted commit.
+
+This is deliberate rather than incidental. The alternative would be to record
+live evidence in a commit that predates the deployment, which can only be done
+by predicting the outcome instead of observing it.
 
 ## What is deployed
 
@@ -44,20 +60,25 @@ runtime image holding only compiled output plus dependencies. The frontend
 means "same origin", so the app calls the origin it was served from rather than
 a hardcoded host.
 
-### Database at deploy time
+### Schema creation happens in the application
 
-`railway.json` runs, in order:
+The application runs `prisma db push` before Nest initialises, in the same
+process that resolves the same `DATABASE_URL` as the code querying it
+(`src/ops/schema-bootstrap.ts`). It is gated on `NODE_ENV=production`, which the
+runtime image already sets, so no platform configuration is involved.
 
-1. `npx prisma db push --schema=./prisma/schema.prisma` — creates the schema
-2. `npx prisma db seed --schema=./prisma/schema.prisma` — loads demo data
+This replaced a schema push configured as a platform deploy hook. That hook was
+not applied on the deployed service: the container ran the image's default
+command, the schema was never created, and the application crashed in
+`RoutingService.onModuleInit` with `P2021 — table public.Request does not exist`.
+Moving the work into the application removed the dependency on a platform
+honouring its configuration, and the deployed service now comes up from an empty
+database without intervention.
 
-The seed is **idempotent by construction**: `upsert` throughout, never
-`deleteMany`. Re-running it on every deploy is safe and will not destroy
-in-flight demo state. Verified by running the sequence twice and confirming
-unchanged row counts.
-
-Seeding is what makes the deployed instance usable. Without it the app boots,
-reports healthy, and presents an empty shell with no request types and no roles.
+The seed runs only when the database has no request types, so a first boot
+populates the demo data while later restarts preserve existing state. Verified:
+a second boot logs `schema.seed.skipped` with `database already populated`, and a
+request created before a restart is still present afterwards.
 
 ### Configuration
 
@@ -66,7 +87,8 @@ reports healthy, and presents an empty shell with no request types and no roles.
 | `DATABASE_URL` | Railway Postgres connection string | Injected by the platform. Required — the boot fails with a named error if absent. |
 | `STATIC_DIR` | `/app/public` | Baked into the image. Serves the frontend. |
 | `PORT` | Injected by the platform | Defaults to 3000 otherwise. |
-| `AI_PROVIDER` | `local` | Deterministic provider; no API key needed. |
+| `AI_PROVIDER` | `gemini` | Real model on the deployed target, with automatic fallback to the deterministic provider. |
+| `GEMINI_API_KEY` | Railway secret | Never in the repository. The test gate runs without it. |
 | `FRONTEND_ORIGIN` | unset | Same-origin deployment needs no CORS allow-list. |
 
 Configuration is validated once at startup. A missing `DATABASE_URL`, an
@@ -121,15 +143,16 @@ journey has an employee submitting for themselves, and a cross-actor attempt
 must be refused — so a green run shows the boundary holds, not merely that
 requests can be created.
 
-**Observed against the production container image:**
+**Observed on the live target:**
 
 ```
+Smoke testing https://internal-operations-service-hub-production-8a07.up.railway.app
 PASS  liveness (200)
 PASS  liveness reports ok
 PASS  readiness (200)
 PASS  readiness reports database ok
 PASS  frontend served at /
-PASS  request submitted (REQ-FCA23D64)
+PASS  request submitted (REQ-B48D6152)
 PASS  submitted request is pending approval
 PASS  request appears in the approver queue
 PASS  approval moves decision to ReadyForQueue
@@ -141,11 +164,9 @@ PASS  cross-actor submission denied (403)
 SMOKE PASSED: 13 checks
 ```
 
-The script was also confirmed to **fail correctly**, which is what makes a pass
-meaningful: against an unreachable host it exits 1 with 5 failures, and with
-PostgreSQL stopped it fails on `readiness (expected 200, got 503)`.
-
-**[PENDING]** the same command run against the live URL, output recorded here.
+The script is also confirmed to **fail correctly**, which is what makes a pass
+meaningful: against an unreachable host it exits 1, and with PostgreSQL stopped
+it fails on readiness and on submission. See *Failure and recovery* below.
 
 ## Health and monitoring
 
@@ -192,59 +213,124 @@ include the exception name and message.
 
 ## Failure and recovery
 
-A controlled failure against the production container image, proving the failure
-path is real and recoverable.
+A controlled failure was executed against the deployed target: the Railway
+PostgreSQL service was stopped while the application kept running, then
+restored.
 
-**Failure.** PostgreSQL stopped while the application kept running:
-
-```
-$ docker stop iosh-pg
-$ curl -s -w '[%{http_code}]' http://localhost:3012/health/ready
-{"status":"not_ready","checks":{"database":{"status":"error","error":"database_unreachable"}}}[503]
-
-$ curl -s -o /dev/null -w 'status=%{http_code}\n' http://localhost:3012/health
-status=200
-```
-
-The application stayed up and served liveness while correctly reporting it could
-not reach its dependency. The smoke run against this state exited non-zero,
-failing on readiness.
-
-**Recovery.** PostgreSQL restarted, critical journey re-run in full:
+**Failure** — `2026-09-30T02:10:42Z`, database stopped:
 
 ```
-$ docker start iosh-pg
-$ curl -s -w '[%{http_code}]' http://localhost:3012/health/ready
-{"status":"ready","checks":{"database":{"status":"ok","latencyMs":29}}}[200]
+$ curl .../health
+{"status":"ok","service":"internal-operations-hub","uptimeSeconds":985}
+[200]
 
-$ BASE_URL=http://localhost:3012 ./scripts/smoke.sh
+$ curl .../health/ready
+{"status":"not_ready","checks":{"database":{"status":"error","latencyMs":26,"error":"database_unreachable"}}}
+[503]
+```
+
+The process stayed up and kept serving liveness while correctly reporting that
+it could not reach its dependency. The application genuinely refused to work
+rather than merely reporting the problem:
+
+```
+GET  /request-types   → 500  {"statusCode":"500","message":"Internal server error"}
+POST /requests        → 500  {"statusCode":"500","message":"Internal server error"}
+GET  /                → 200  text/html   (frontend still served)
+```
+
+And the release gate caught it — the smoke run exited non-zero:
+
+```
+FAIL  readiness (expected 200, got 503)
+FAIL  readiness reports database ok
+FAIL  could not submit a request — {"statusCode":500,"message":"Internal server error"}
+3 passed, 3 failed → exit 1
+```
+
+**Recovery** — `2026-09-30T02:12:29Z`, database restored:
+
+```
+$ curl .../health
+{"status":"ok","service":"internal-operations-hub","uptimeSeconds":1092}
+[200]
+
+$ curl .../health/ready
+{"status":"ready","checks":{"database":{"status":"ok","latencyMs":2}}}
+[200]
+```
+
+Readiness returned 200 within roughly ten seconds of the database being started.
+
+The critical journey was then re-run to completion against the recovered
+instance:
+
+```
+Smoke testing https://internal-operations-service-hub-production-8a07.up.railway.app
+PASS  liveness (200)
+PASS  liveness reports ok
+PASS  readiness (200)
+PASS  readiness reports database ok
+PASS  frontend served at /
+PASS  request submitted (REQ-102D2B04)
+PASS  submitted request is pending approval
+PASS  request appears in the approver queue
+PASS  approval moves decision to ReadyForQueue
+PASS  fulfillment resolve (201)
+PASS  fulfillment close (201)
+PASS  request reached Closed
+PASS  cross-actor submission denied (403)
+
 SMOKE PASSED: 13 checks
 ```
 
-No application restart was required, and no data was lost — the journey runs
-submit → approve → fulfil → close to completion after the database returns.
+**No application restart was required** — `uptimeSeconds` rose continuously from
+985 to 1092 across the outage — and **no data was lost**. A request created
+before the failure, `REQ-B48D6152`, still carried its complete history
+afterwards:
 
-**[PENDING]** repeat this cycle against the live target by stopping the Railway
-PostgreSQL service, and record the observed output here.
+```
+status: Closed
+history: Submitted -> Pending Approval -> Approved -> In Progress -> Resolved -> Closed
+```
+
+Seeded reference data was likewise intact: 3 request types and 9 directory
+actors.
 
 ## Deployment verification
 
 The image was built and exercised before deployment, so build failures are known
-rather than discovered on Railway.
+rather than discovered on the platform.
 
 - `docker build` completes; image is ~473 MB.
-- Both `preDeployCommand` steps were executed **inside the built image** with no
-  `.env` present, confirming the seed works from environment variables alone.
-- The container was started using the image's baked-in `STATIC_DIR` and passed
-  the full 13-check smoke run.
+- The image was started locally against an empty PostgreSQL database and came up
+  with the schema created and demo data seeded, then passed the full 13-check
+  smoke run. The build therefore does not depend on the deployment succeeding.
 - `prisma generate` succeeds on `node:24-alpine`: the engine resolves to
   `libquery_engine-linux-musl-openssl-3.0.x`, which is musl-linked and bundles
   its own OpenSSL. The `openssl` and `libc6-compat` packages in the runtime
   stage are a guard against a future Prisma release dropping that build —
   confirmed belt-and-braces by building and running a control image without them.
+- A control build confirmed the in-application bootstrap is load-bearing: without
+  it the image starts, reports healthy, and crashes on the first query with
+  `P2021`.
 
-**[PENDING]** the live URL, and confirmation that a cold open with no local
-setup loads the app and the critical journey.
+**On the live target.** The deployed service was opened cold, with no local
+setup, and verified end to end:
+
+| Check | Result |
+|---|---|
+| `GET /` | 200 `text/html`, `<title>OpsHub</title>` |
+| SPA bundle / CSS / favicon | 200, 271 KB / 36 KB, all from the same origin |
+| `GET /request-types` | 200, 3 seeded request types |
+| `GET /directory/actors` | 200, 9 seeded actors |
+| `GET /health` | 200 |
+| `GET /health/ready` | 200, database ok |
+| `scripts/smoke.sh` | 13 passed, exit 0 |
+
+The app and API are served from one origin, so a single URL is all a reviewer
+needs — there is no second service to start and no CORS configuration to get
+wrong.
 
 ## Known gaps
 
@@ -316,15 +402,13 @@ implemented; `x-actor-id` is the placeholder seam (week3 acknowledges).
 
 ## Remaining work
 
-Everything below is **[PENDING]** until the deployment exists.
+All release evidence above is recorded against the deployed target. Two items
+remain before submission:
 
-| Item | What to record |
+| Item | State |
 |---|---|
-| Live URL | The deployed Railway URL, entered in *Release identification* as the deployed SHA and target |
-| Live smoke run | `BASE_URL=<url> ./scripts/smoke.sh` output, replacing the container-image result |
-| Live failure and recovery | Stop and start the Railway PostgreSQL service; record the readiness transitions and the re-run journey |
-| Cold open | Confirmation that the app loads and the journey completes with no local setup |
-| README Live App section | URL, what it does, demo roles, and the one critical journey |
+| Live URL, smoke run, failure/recovery, cold open | **Done** — evidenced above against the deployed target |
+| README *Live App* section | Fill in the live URL, which is currently marked pending there |
 
 ## Engineering reference
 

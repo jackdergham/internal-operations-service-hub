@@ -14,13 +14,23 @@ docs/      Specification, architecture, and one evidence file per week
 
 ## Live App
 
-> **[PENDING]** the deployed URL, filled in once the release target is
-> provisioned. Everything else here is verifiable against the production
-> container image today.
+**<https://internal-operations-service-hub-production-8a07.up.railway.app/>**
 
-The app is served from a single origin — the API serves the built frontend when
-`STATIC_DIR` is set — so there is one URL and no CORS configuration. A cold open
-with no local setup should load the app and allow the journey below.
+Deployed release `3ae3f59`. The app and the API are served from a single origin,
+so this one URL is all you need — no second service to start, no CORS
+configuration, and nothing to install locally.
+
+The commit that follows the deployed one updates documentation only. The
+application running at that URL is identical to the application in this
+repository, so the behaviour documented here is what the submitted commit does.
+
+```bash
+curl https://internal-operations-service-hub-production-8a07.up.railway.app/health/ready
+BASE_URL=https://internal-operations-service-hub-production-8a07.up.railway.app ./scripts/smoke.sh
+```
+
+The smoke script runs the critical journey below against the live target and
+exits non-zero on any failure.
 
 **Demo access.** Click the avatar in the top bar to switch identity between four
 seeded actors. Requests route by the employee's manager:
@@ -36,15 +46,9 @@ seeded actors. Requests route by the employee's manager:
 the fulfilment queue. The UI offers the first four; the rest are reachable via
 the API with the `x-actor-id` header.
 
-**One critical journey.** Submit → approve → fulfil → close. `scripts/smoke.sh`
-runs exactly this against any target and exits non-zero on failure, so it is the
-authoritative version:
+**One critical journey.** Submit → approve → fulfil → close. This is the path
+that was smoke-tested against the deployed target:
 
-```bash
-BASE_URL=<url> ./scripts/smoke.sh
-```
-
-By hand, in the UI:
 
 1. **Submit.** Open **Submit request**, pick a type, write a description of at
    least 10 characters, and submit. The persisted request ID and
