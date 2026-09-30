@@ -1,96 +1,240 @@
 # Internal Operations Service Hub
 
-A small internal request-management service for HR and IT operations. The current full-stack slice lets a requester submit a service request through a React UI, validates it in NestJS, persists it in PostgreSQL through Prisma, and hands it to the live Routing queue for approval. Approval updates the same persisted request and appends a status event.
-
-## Project structure
+A request-management service for HR and IT operations. A requester submits a
+request through a React UI; NestJS validates it, persists it in PostgreSQL via
+Prisma, and routes it to the approver queue. Approval updates the same persisted
+request and appends a status event, and the request then moves to a fulfilment
+queue where it is resolved and closed.
 
 ```text
 backend/   NestJS API, Prisma schema, PostgreSQL persistence, tests
 frontend/  React + Vite operational UI
-docs/      Product, architecture, data model, and delivery evidence
+docs/      Specification, architecture, and one evidence file per week
 ```
 
-## Prerequisites
+## Live App
 
-- Node.js 20 or newer
-- npm
+> **[PENDING]** the deployed URL, filled in once the release target is
+> provisioned. Everything else here is verifiable against the production
+> container image today.
 
-## Install
+The app is served from a single origin — the API serves the built frontend when
+`STATIC_DIR` is set — so there is one URL and no CORS configuration. A cold open
+with no local setup should load the app and allow the journey below.
 
-Install each application separately:
+**Demo access.** Click the avatar in the top bar to switch identity between four
+seeded actors. Requests route by the employee's manager:
+
+| Actor | Role | Routes to |
+|---|---|---|
+| `employee-1` | Requester | `manager-1` |
+| `employee-2` | Requester | `manager-2` |
+| `manager-1` | Manager, IT queue | — |
+| `manager-2` | Manager, HR queue | — |
+
+`admin-1` is also seeded for configuration and reports, and `fulfiller-it-1` for
+the fulfilment queue. The UI offers the first four; the rest are reachable via
+the API with the `x-actor-id` header.
+
+**One critical journey.** Submit → approve → fulfil → close. `scripts/smoke.sh`
+runs exactly this against any target and exits non-zero on failure, so it is the
+authoritative version:
 
 ```bash
-cd backend
-npm install
-npm run db:generate
-npm run db:push
-
-cd ../frontend
-npm install
+BASE_URL=<url> ./scripts/smoke.sh
 ```
 
-`backend/.env` contains the local PostgreSQL connection string. Start the database first, then create the schema and demo data:
+By hand, in the UI:
+
+1. **Submit.** Open **Submit request**, pick a type, write a description of at
+   least 10 characters, and submit. The persisted request ID and
+   `Pending Approval` status are displayed.
+2. **Approve.** Switch to `manager-1`, open **Routing queue**, find the request,
+   and approve it. The step becomes `Approved` and the decision `ReadyForQueue`.
+   A rejection requires a reason, which the requester can then see.
+3. **Fulfil.** As `fulfiller-it-1`, resolve the request from the fulfilment
+   queue, then close it. The request reaches `Closed`.
+4. **Audit.** Open the request's audit view to see the full status history and,
+   for a rejected request, the rejection reason.
+
+Optionally, use **Fill form with AI** in the request creator to get suggested
+type and form values. Suggestions never submit anything; required fields still
+need completing.
+
+The same journey over HTTP, for the seeded approval:
+
+```bash
+curl -X POST <url>/routing-decisions/seed-routing-001/steps/seed-approval-001/decision \
+  -H 'Content-Type: application/json' \
+  -H 'x-actor-id: manager-1' \
+  -d '{"decision":"approve"}'
+```
+
+## Engineer Quick Start
+
+**Prerequisites** — Node.js 20+ and npm. The backend also needs a PostgreSQL
+instance; the quickest is the container below, which requires Docker.
+
+**Install and configure the database:**
 
 ```bash
 docker run -d --name iosh-pg -e POSTGRES_PASSWORD=iosh -e POSTGRES_USER=iosh \
   -e POSTGRES_DB=iosh -p 5433:5432 postgres:17-alpine
-cd backend && npm run release:prepare   # prisma db push && prisma db seed
+cd backend && npm install
 ```
+
+`backend/.env` points at that database:
 
 ```text
 DATABASE_URL="postgresql://iosh:iosh@localhost:5433/iosh"
 ```
 
-For optional Gemini assistance, add the following backend variables. Never commit the API key:
+Copy `backend/.env.example` if you need a starting point. It documents every
+variable. `GEMINI_API_KEY` is optional — without it, AI assistance falls back to
+the deterministic local provider, which is what lets the AI evaluation run with
+no credentials at all.
 
-```text
-AI_PROVIDER=gemini
-GEMINI_API_KEY=<your-rotated-key>
-GEMINI_MODEL=<supported-gemini-model>
+**Create the schema and demo data:**
+
+```bash
+cd backend && npm run release:prepare   # prisma db push && prisma db seed
 ```
 
-When `AI_PROVIDER` is not `gemini`, or the key is unavailable, the backend uses the deterministic local assistance provider instead.
+**Install and run the frontend:**
 
-The schema targets PostgreSQL in local development, in CI, and in deployment alike, so the tests and the live app run on the same database engine.
+```bash
+cd frontend && npm install
+```
 
-## Run the applications
+Then run the two applications in separate terminals:
 
-Use two terminals.
+```bash
+cd backend  && npm run start:dev   # API on http://localhost:3000
+cd frontend && npm run dev         # UI  on http://localhost:5173
+```
 
-Terminal 1, backend:
+**Verify.** Tests require a reachable database — there is no embedded fallback.
+Unit and e2e share one database, so they run serially by design; do not
+re-enable parallel test files.
 
 ```bash
 cd backend
-npm run start:dev
+npm test          # 120 unit tests
+npm run test:e2e   # 14 e2e tests over the HTTP contract
+npm run eval:ai    # 9 deterministic AI cases, no API key needed
+npm run lint
+npm run build      # also the typecheck: vitest does not typecheck
+
+cd ../frontend
+npm run lint
+npm run build
 ```
 
-The API runs at `http://localhost:3000`.
+The same checks run on every push to `main` through GitHub Actions
+(`.github/workflows/ci.yml`), against a PostgreSQL service container, so a fresh
+clone can verify the project without reproducing any of the local setup.
 
-Terminal 2, frontend:
+## Operations
+
+**Health and readiness.** Two unauthenticated endpoints; neither exposes
+configuration, data, or a connection string.
+
+| Endpoint | Meaning |
+|---|---|
+| `GET /health` | Liveness — the process is up |
+| `GET /health/ready` | Readiness — the database is reachable; 503 when it is not |
 
 ```bash
-cd frontend
-npm run dev
+curl <url>/health
+curl <url>/health/ready
 ```
 
-The UI runs at `http://localhost:5173`.
+A platform health check should point at `/health/ready`, since it is the one
+that reflects a real dependency failure. This deployment points at `/health`
+deliberately, so a transient database fault does not trigger a restart loop.
 
-Open the frontend and use the **Submit request** section. The form sends a real request to `POST /requests` and displays the persisted request ID and `Pending Approval` status. Switch to **Routing queue** to see the newly submitted request and approve or reject it through the NestJS routing endpoint. Click the avatar in the top bar to switch between `employee-1`, `employee-2`, `manager-1`, and `manager-2`. Requests from `employee-1` route only to `manager-1`, while requests from `employee-2` route only to `manager-2`.
+**Logs and monitoring.** Every request emits one structured JSON line to stdout:
 
-Inside the same request creator, enter a description and select **Fill form with AI** to receive suggested request type and form values. Review the suggestions and complete any missing required fields before submitting. AI assistance does not submit requests automatically.
-
-## Service Request API
-
-List seeded request types:
-
-```bash
-curl http://localhost:3000/request-types
+```json
+{"timestamp":"2026-09-29T20:47:27.207Z","level":"info","event":"http.request.completed","requestId":"164fb601-...","method":"GET","path":"/requests/mine","statusCode":200,"durationMs":3,"actorId":"employee-1"}
 ```
 
-Submit an authorized request:
+Each line carries a `requestId` that is also returned in the `x-request-id`
+response header, so a single request can be traced end to end. A
+caller-supplied `x-request-id` is preserved rather than replaced, letting a
+client correlate its own identifier with the server log. Failures log at `warn`
+or `error` and include the exception name and message.
+
+**Configuration ownership.** `backend/.env.example` is the reference and is the
+only configuration file in the repository — `backend/.env` is gitignored and no
+API key is required for any check to run. Configuration is validated once at
+startup: a missing `DATABASE_URL`, an unrecognised `AI_PROVIDER`, or a malformed
+`FRONTEND_ORIGIN` fails the boot and names every problem, rather than failing
+later on a single request.
+
+**Controlled failure and recovery.** Stopping the database makes readiness go
+red while liveness stays green; restoring it makes both healthy again, with no
+application restart and no data loss:
+
+```json
+{"status":"not_ready","checks":{"database":{"status":"error","error":"database_unreachable"}}}
+```
+
+**Post-recovery verification.** The journey must be re-run after recovery, not
+assumed. `scripts/smoke.sh` is that check — it walks submit → approve → fulfil →
+close and asserts the authorization boundary, so a pass after recovery is
+evidence the service is genuinely usable rather than merely answering requests.
+
+The full failure and recovery transcript, with observed output, is in
+[Week 5 release operations](docs/week5-release-operations.md).
+
+**Deployment.** A single service, built by `Dockerfile` in three stages and
+configured by `railway.json`, which also runs the schema and seed commands at
+deploy time. Seeding is idempotent — `upsert` only, never `deleteMany` — so it
+is safe on every deploy and will not destroy in-flight demo state. Without it
+the app would boot healthy and present an empty shell with no request types and
+no roles.
+
+## Evidence Map
+
+Direct links to the proof, in the order the work was delivered. No hunting.
+
+**Week 1 — design.** Specification and the decisions it rests on, written before
+any code:
+
+- [Product specification](docs/product-spec.md)
+- [Architecture](docs/architecture.md)
+- [Data model](docs/data-model.md)
+- [ADR-001](docs/decisions/ADR-001.md)
+
+**Weeks 2–5 — delivery.** One file per week. These are point-in-time records of
+what each week actually delivered and are intentionally not rewritten
+afterwards:
+
+- [Week 2 — routing evidence](docs/week2-agentic-workflow.md)
+- [Week 3 — full-stack delivery](docs/week3-full-stack-delivery.md)
+- [Week 4 — production AI](docs/week4-production-ai.md)
+- [Week 5 — release operations](docs/week5-release-operations.md)
+
+Week 5 carries the release SHA, the release-gate result, the smoke-test output,
+the failure and recovery transcript, and the known gaps between the
+specification and what was built.
+
+## API Reference
+
+The HTTP contract, for working against the API directly. The approver is always
+derived from the `x-actor-id` header, never from a query parameter or the body.
+
+**List seeded request types:**
 
 ```bash
-curl -X POST http://localhost:3000/requests \
+curl <url>/request-types
+```
+
+**Submit an authorized request:**
+
+```bash
+curl -X POST <url>/requests \
   -H 'Content-Type: application/json' \
   -H 'x-actor-id: employee-1' \
   -d '{
@@ -102,170 +246,38 @@ curl -X POST http://localhost:3000/requests \
   }'
 ```
 
-The backend attaches the authenticated actor's directory department to `formData`; the response contains a generated request ID, `status: "Pending Approval"`, and both the initial `Submitted` event and the Routing handoff event.
+The backend attaches the authenticated actor's directory department to
+`formData`. The response carries a generated request ID, `status: "Pending
+Approval"`, and both the initial `Submitted` event and the Routing handoff event.
 
-List the live approval queue. The approver is taken from the `x-actor-id` header, not a query parameter:
-
-```bash
-curl http://localhost:3000/routing-decisions/queue \
-  -H 'x-actor-id: manager-1'
-```
-
-The matching employee-to-manager hierarchy is:
-
-```text
-employee-1 -> manager-1
-employee-2 -> manager-2
-```
-
-Only the designated manager can approve or reject a routing step.
-
-Use the returned `decisionId` and `stepId` to process a request:
+**List the live approval queue:**
 
 ```bash
-curl -X POST http://localhost:3000/routing-decisions/{decisionId}/steps/{stepId}/decision \
+curl <url>/routing-decisions/queue -H 'x-actor-id: manager-1'
+```
+
+**Decide a step**, using the `decisionId` and `stepId` from the queue response or
+from any request audit:
+
+```bash
+curl -X POST <url>/routing-decisions/{decisionId}/steps/{stepId}/decision \
   -H 'Content-Type: application/json' \
   -H 'x-actor-id: manager-1' \
   -d '{"decision":"approve"}'
 ```
 
-The approver is derived from the `x-actor-id` header, so the body carries only the decision.
+Only the designated manager may decide a step.
 
-The persisted request moves from `Pending Approval` to `Approved` and receives an `Approved` status event.
+**Behaviours worth knowing:**
 
-An actor mismatch is intentionally denied:
+| Condition | Result |
+|---|---|
+| Actor is not the requester | `403 Forbidden` |
+| Actor is unknown to the directory | `401 Unauthorized` |
+| Description shorter than 10 characters | `400 Bad Request` |
+| Reused `idempotencyKey` | The original request, with `replayed: true` |
+| Rejection without a reason | `400 Bad Request` |
+| Deciding an already-decided step | `409 Conflict` |
 
-```bash
-curl -i -X POST http://localhost:3000/requests \
-  -H 'Content-Type: application/json' \
-  -H 'x-actor-id: employee-2' \
-  -d '{
-    "requesterId": "employee-1",
-    "requestTypeId": "new-laptop",
-    "description": "This request is submitted for another employee.",
-    "formData": {}
-  }'
-```
-
-This returns `403 Forbidden`. A description shorter than 10 characters returns `400 Bad Request`. Reusing the same `idempotencyKey` returns the original request with `replayed: true` instead of creating a duplicate.
-
-## Existing routing API
-
-The seeded approval is available at:
-
-```bash
-curl -X POST http://localhost:3000/routing-decisions/seed-routing-001/steps/seed-approval-001/decision \
-  -H 'Content-Type: application/json' \
-  -H 'x-actor-id: manager-1' \
-  -d '{"decision":"approve"}'
-```
-
-These are the IDs created by `npm run db:seed`. This changes the seeded approval step to `Approved` and its routing decision to `ReadyForQueue`. Routing decisions and approval steps are persisted in PostgreSQL, and the queue is read from the database rather than held in memory.
-
-## Automated verification
-
-Backend checks:
-
-```bash
-cd backend
-npm test
-npm run test:e2e
-npm run build
-npm run lint
-npm run eval:ai
-```
-
-`npm run eval:ai` runs the nine deterministic request-assistance cases without requiring a Gemini API key or network access.
-
-Frontend checks:
-
-```bash
-cd frontend
-npm run build
-npm run lint
-```
-
-The backend tests cover the request business rules, PostgreSQL persistence, HTTP contract, authorization denial, invalid input, idempotent retry handling, and the employee-to-manager routing hierarchy.
-
-## Engineer quick start
-
-Requires Node.js 20+ and npm. The backend additionally needs a PostgreSQL
-instance; the quickest way to get one locally is the container below.
-
-```bash
-docker run -d --name iosh-pg -e POSTGRES_PASSWORD=iosh -e POSTGRES_USER=iosh \
-  -e POSTGRES_DB=iosh -p 5433:5432 postgres:17-alpine
-cd backend && npm install && npm run release:prepare
-cd ../frontend && npm install
-```
-
-`npm run release:prepare` runs `prisma db push` and `prisma db seed`, creating
-the schema and the demo roles and requests the UI expects.
-
-Then run the two applications in separate terminals — `npm run start:dev` in
-`backend/`, `npm run dev` in `frontend/` — and open `http://localhost:5173`.
-`Install` above covers the same steps in more detail.
-
-The same checks run on every push through GitHub Actions (`.github/workflows/ci.yml`),
-including a PostgreSQL service container, so a fresh clone can verify the project
-without reproducing the local setup.
-
-## Operations
-
-**Health.** Two unauthenticated endpoints, both safe to expose to a platform
-health check because neither reveals configuration or data:
-
-```bash
-curl http://localhost:3000/health         # liveness: the process is up
-curl http://localhost:3000/health/ready   # readiness: the database is reachable
-```
-
-`/health/ready` returns `503 Service Unavailable` with a per-check breakdown when
-the database is unreachable, which is what makes a real failure observable rather
-than inferred. A platform health check should point at `/health/ready`.
-
-**Logs.** Every request emits one structured JSON line to stdout:
-
-```json
-{"timestamp":"2026-09-29T20:47:27.207Z","level":"info","event":"http.request.completed","requestId":"164fb601-...","method":"GET","path":"/requests/mine","statusCode":200,"durationMs":3,"actorId":"employee-1"}
-```
-
-Each line carries a `requestId` that is also returned in the `x-request-id`
-response header, so a specific request can be traced end to end. Failed requests
-log at `warn` or `error` and include the exception name and message. A
-`requestId` supplied by a caller is preserved rather than replaced, which lets a
-client correlate its own identifier with the server log.
-
-**Configuration.** `backend/.env.example` documents every variable. Configuration
-is validated once at startup: a missing `DATABASE_URL`, an unrecognised
-`AI_PROVIDER`, or a malformed `FRONTEND_ORIGIN` fails the boot with a message
-naming every problem, rather than failing later on a single request.
-
-**Single deployment.** Setting `STATIC_DIR` makes the API serve the built
-frontend, so the app and API share one origin and no CORS configuration is
-needed. It is unset locally, where Vite serves the UI on its own port.
-
-**Recovery.** The failure and recovery run against the deployed target —
-readiness going red when the database is stopped, then green once it is restored,
-with the critical journey re-run afterwards — is recorded in
-[Week 5 release operations](docs/week5-release-operations.md).
-
-## Documentation
-
-Design and specification, current as of the latest delivery:
-
-- [Product specification](docs/product-spec.md)
-- [Architecture](docs/architecture.md)
-- [Data model](docs/data-model.md)
-- [ADR-001](docs/decisions/ADR-001.md)
-
-Delivery evidence, one file per week. These are point-in-time records of what
-each week actually delivered and are intentionally not rewritten afterwards:
-
-- [Week 2 routing evidence](docs/week2-agentic-workflow.md)
-- [Week 3 full-stack delivery](docs/week3-full-stack-delivery.md)
-- [Week 4 production AI](docs/week4-production-ai.md)
-- [Week 5 release operations](docs/week5-release-operations.md)
-
-Known gaps between the specification and the implementation are catalogued in
-[docs/v2-plans.md](docs/v2-plans.md).
+Routing decisions and approval steps are persisted in PostgreSQL, and the queue
+is read from the database rather than held in memory.

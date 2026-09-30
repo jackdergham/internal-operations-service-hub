@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+backend/.env
+backend/prisma/dev.db
+docs
+scripts
+.git
+.github
+*.md
